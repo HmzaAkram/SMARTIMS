@@ -39,7 +39,7 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('company.dashboard', ['tenant' => $user->tenant->domain]);
         }
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        return redirect()->intended(route('superadmin.dashboard', absolute: false));
     }
 
     /**
