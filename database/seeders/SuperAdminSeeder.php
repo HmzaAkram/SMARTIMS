@@ -1,6 +1,4 @@
 <?php
-// database/seeders/SuperAdminSeeder.php
-
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
@@ -18,22 +16,34 @@ class SuperAdminSeeder extends Seeder
         app()->forgetInstance('tenant');
         DB::setDefaultConnection('mysql');
 
-        // Create Super Admin in central DB
+        // Super admin ke liye tenant_id NULL hona chahiye
         $superAdmin = User::updateOrCreate(
             ['email' => 'ha8028377@gmail.com'],
             [
                 'name' => 'HMZA',
                 'password' => Hash::make('password'),
                 'email_verified_at' => now(),
-                'tenant_id' => null,
+                'tenant_id' => null, // Super admin central DB mein hai
             ]
         );
 
-        // Assign role (ensure role exists)
+        // Role assignment - directly insert with tenant_id = null
         $role = Role::firstOrCreate(['name' => 'super-admin', 'guard_name' => 'web']);
-        $superAdmin->assignRole($role);
+        
+        // Check if role already assigned
+        if (!$superAdmin->hasRole($role)) {
+            // Manually insert to handle tenant_id
+            DB::table('model_has_roles')->insert([
+                'role_id' => $role->id,
+                'model_type' => get_class($superAdmin),
+                'model_id' => $superAdmin->id,
+                'tenant_id' => null, // Super admin ke liye null
+            ]);
+        }
 
-        // Optional: Create a demo tenant for testing
+        $this->command->info("Super Admin created successfully!");
+
+        // Optional: Create demo tenant
         $this->createDemoTenant();
         
         // Switch back to central
@@ -42,7 +52,6 @@ class SuperAdminSeeder extends Seeder
 
     private function createDemoTenant()
     {
-        // Make sure we're on central database
         DB::setDefaultConnection('mysql');
         
         $tenant = Tenant::updateOrCreate(
@@ -56,19 +65,15 @@ class SuperAdminSeeder extends Seeder
             ]
         );
 
-        // Step 1: Create the database first
         $this->command->info("Creating database: {$tenant->database}");
         \App\Services\TenantService::createDatabase($tenant);
 
-        // Step 2: Run migrations on the new database
         $this->command->info("Running migrations for tenant: {$tenant->name}");
         \App\Services\TenantService::runMigrations($tenant);
 
-        // Step 3: Now switch to tenant and create admin user
         $this->command->info("Creating admin user for tenant: {$tenant->name}");
         \App\Services\TenantService::switchToTenant($tenant);
 
-        // Create company admin in tenant DB
         $user = User::updateOrCreate(
             ['email' => 'admin@demo.com'],
             [
@@ -80,7 +85,16 @@ class SuperAdminSeeder extends Seeder
         );
 
         $role = Role::firstOrCreate(['name' => 'company-admin', 'guard_name' => 'web']);
-        $user->assignRole($role);
+        
+        // Tenant user ke liye tenant_id chahiye
+        if (!$user->hasRole($role)) {
+            DB::table('model_has_roles')->insert([
+                'role_id' => $role->id,
+                'model_type' => get_class($user),
+                'model_id' => $user->id,
+                'tenant_id' => $tenant->id, // Tenant user ke liye tenant_id
+            ]);
+        }
         
         $this->command->info("Demo tenant created successfully!");
     }

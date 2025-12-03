@@ -5,28 +5,42 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 
 class RolesAndPermissionsSeeder extends Seeder
 {
     public function run()
     {
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        // Clear cache using artisan command instead of registrar
+        try {
+            Artisan::call('cache:clear');
+            Artisan::call('permission:cache-reset');
+        } catch (\Exception $e) {
+            // Ignore cache errors during seeding
+            $this->command->warn('Cache clear skipped: ' . $e->getMessage());
+        }
 
-        // Fix any existing rows that have guard_name = null (common after old seeds)
-        Role::whereNull('guard_name')->update(['guard_name' => 'web']);
-        Permission::whereNull('guard_name')->update(['guard_name' => 'web']);
+        // Make sure we're on the right connection
+        DB::setDefaultConnection('mysql');
+
+        // Fix any existing rows that have guard_name = null
+        DB::table('roles')->whereNull('guard_name')->update(['guard_name' => 'web']);
+        DB::table('permissions')->whereNull('guard_name')->update(['guard_name' => 'web']);
 
         // Permissions — always specify guard_name
         $permissions = [
             'manage tenants',
             'manage inventory',
             'view reports',
+            'manage users',
+            'manage roles',
         ];
 
         foreach ($permissions as $perm) {
             Permission::firstOrCreate([
                 'name' => $perm,
-                'guard_name' => 'web'   // <-- important
+                'guard_name' => 'web'
             ]);
         }
 
@@ -41,12 +55,14 @@ class RolesAndPermissionsSeeder extends Seeder
             'name' => 'company-admin',
             'guard_name' => 'web'
         ]);
-        $companyAdmin->syncPermissions(['manage inventory', 'view reports']);
+        $companyAdmin->syncPermissions(['manage inventory', 'view reports', 'manage users']);
 
         $staff = Role::firstOrCreate([
             'name' => 'staff',
             'guard_name' => 'web'
         ]);
         $staff->givePermissionTo('view reports');
+
+        $this->command->info('Roles and Permissions created successfully!');
     }
-}   
+}
