@@ -6,18 +6,28 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up(): void
+    public function up()
     {
         Schema::table('tenants', function (Blueprint $table) {
-            $table->string('email')->nullable()->after('domain');
-            $table->string('phone')->nullable()->after('email');
+            // Only add columns if they don't exist
+            if (!Schema::hasColumn('tenants', 'email')) {
+                $table->string('email')->nullable()->after('domain');
+            }
+            
+            if (!Schema::hasColumn('tenants', 'phone')) {
+                $table->string('phone')->nullable()->after('email');
+            }
+            
+            if (!Schema::hasColumn('tenants', 'address')) {
+                $table->text('address')->nullable()->after('phone');
+            }
         });
     }
 
-    public function down(): void
+    public function down()
     {
         Schema::table('tenants', function (Blueprint $table) {
-            $table->dropColumn(['email', 'phone']);
+            $table->dropColumn(['email', 'phone', 'address']);
         });
     }
 };
