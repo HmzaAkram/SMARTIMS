@@ -7,7 +7,9 @@ use App\Models\User;
 use App\Models\Tenant;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Spatie\Permission\Models\Role;
+use App\Services\TenantService;
 
 class SuperAdminSeeder extends Seeder
 {
@@ -52,51 +54,87 @@ class SuperAdminSeeder extends Seeder
         
         $this->command->info('Creating demo tenant...');
 
-        $tenant = Tenant::firstOrCreate(
-            ['domain' => 'demo'],
-            [
-                'name' => 'Demo Company',
-                'database' => 'smartims_tenant_demo',
-                'slug' => 'demo',
-                'email' => 'demo@example.com',
-                'phone' => '1234567890',
-                'status' => 'active',
-            ]
-        );
+        // Check if tenant already exists
+        $existingTenant = Tenant::where('domain', 'demo')->first();
+        if ($existingTenant) {
+            $this->command->info('Demo tenant already exists. Skipping...');
+            return;
+        }
 
-        // Only create database if TenantService exists
-        if (class_exists(\App\Services\TenantService::class)) {
-            try {
-                $this->command->info("Creating database: {$tenant->database}");
-                \App\Services\TenantService::createDatabase($tenant);
+        try {
+            // Create tenant using TenantService (correct way)
+            $tenantService = new TenantService();
+            
+            $this->command->info('Creating demo tenant using TenantService...');
+            
+            $tenant = $tenantService->create(
+                'Demo Company',
+                'demo',
+                'demo@example.com',
+                '1234567890'
+            );
+            
+            $this->command->info('✓ Demo tenant created successfully!');
+            
+            // Now create admin user for this tenant
+            $this->createDemoTenantAdmin($tenant);
+            
+        } catch (\Exception $e) {
+            $this->command->error('Error creating demo tenant: ' . $e->getMessage());
+            $this->command->error('Stack trace: ' . $e->getTraceAsString());
+        }
+    }
 
-                $this->command->info("Running migrations for tenant: {$tenant->name}");
-                \App\Services\TenantService::runMigrations($tenant);
-
-                $this->command->info("Creating admin user for tenant: {$tenant->name}");
-                \App\Services\TenantService::switchToTenant($tenant);
-
-                $user = User::firstOrCreate(
-                    ['email' => 'admin@demo.com'],
-                    [
-                        'name' => 'Demo Admin',
-                        'password' => Hash::make('password'),
-                        'email_verified_at' => now(),
-                        'tenant_id' => $tenant->id,
-                    ]
-                );
-
-                $role = Role::firstOrCreate(['name' => 'company-admin', 'guard_name' => 'web']);
-                $user->assignRole($role);
-
-                \App\Services\TenantService::switchToCentral();
-                
-                $this->command->info('✓ Demo tenant created successfully!');
-                $this->command->info('Email: admin@demo.com');
-                $this->command->info('Password: password');
-            } catch (\Exception $e) {
-                $this->command->error('Error creating demo tenant: ' . $e->getMessage());
+    private function createDemoTenantAdmin(Tenant $tenant)
+    {
+        $this->command->info("Creating admin user for tenant: {$tenant->name}");
+        
+        try {
+            // Switch to tenant database
+            TenantService::switchToTenant($tenant);
+            
+            // Check if users table exists
+            if (!Schema::hasTable('users')) {
+                $this->command->error('Users table does not exist in tenant database!');
+                TenantService::switchToCentral();
+                return;
             }
+            
+            // Create admin user
+            $user = User::firstOrCreate(
+                ['email' => 'admin@demo.com'],
+                [
+                    'name' => 'Demo Admin',
+                    'password' => Hash::make('password'),
+                    'email_verified_at' => now(),
+                    'tenant_id' => $tenant->id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]
+            );
+            
+            // Assign role (check if roles table exists)
+            if (Schema::hasTable('roles')) {
+                $role = Role::firstOrCreate(
+                    ['name' => 'company-admin', 'guard_name' => 'web']
+                );
+                
+                if (!$user->hasRole($role)) {
+                    $user->assignRole($role);
+                }
+            }
+            
+            // Switch back to central
+            TenantService::switchToCentral();
+            
+            $this->command->info('✓ Demo tenant admin created successfully!');
+            $this->command->info('Email: admin@demo.com');
+            $this->command->info('Password: password');
+            $this->command->info('Login URL: http://demo.smartims.test:8000/login');
+            
+        } catch (\Exception $e) {
+            $this->command->error('Error creating demo admin: ' . $e->getMessage());
+            TenantService::switchToCentral(); // Always switch back
         }
     }
 }

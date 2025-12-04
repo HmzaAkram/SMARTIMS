@@ -6,20 +6,23 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
- public function up()
-{
-    Schema::table('tenants', function (Blueprint $table) {
-        $table->enum('status', ['active', 'inactive', 'suspended'])->default('active')->after('id');
-    });
-}
+    public function up()
+    {
+        // Check if column exists before adding
+        if (!Schema::hasColumn('tenants', 'status')) {
+            Schema::table('tenants', function (Blueprint $table) {
+                $table->enum('status', ['active', 'inactive', 'suspended'])->default('active')->after('id');
+            });
+        }
+    }
 
-public function down()
-{
-    Schema::table('tenants', function (Blueprint $table) {
-        $table->dropColumn('status');
-    });
-}
+    public function down()
+    {
+        // Only drop column if it exists
+        if (Schema::hasColumn('tenants', 'status')) {
+            Schema::table('tenants', function (Blueprint $table) {
+                $table->dropColumn('status');
+            });
+        }
+    }
 };

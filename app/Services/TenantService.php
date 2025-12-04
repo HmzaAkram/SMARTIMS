@@ -146,25 +146,116 @@ class TenantService
     }
 
     private function runMigrationsWithVerification(Tenant $tenant): void
-    {
-        \Log::info("--- Starting migrations with verification ---");
+{
+    \Log::info("--- Creating tenant database tables ---");
 
-        // STEP 1: Core migrations (users, sessions, etc.)
-        \Log::info("STEP 1: Running core migrations...");
-        $this->runMigration('database/migrations', 'Core', $tenant);
+    // 1. Create users table (CRITICAL)
+    $this->createTenantUsersTable();
+    
+    // 2. Create other required tables with SQL
+    $this->createRequiredTablesWithSQL();
+    
+    \Log::info("--- Tenant database tables created ---");
+}
 
-        // STEP 2: Spatie Permission migrations
-        \Log::info("STEP 2: Running Spatie permission migrations...");
-        $this->runMigration('vendor/spatie/laravel-permission/database/migrations', 'Spatie Permission', $tenant);
-
-        // STEP 3: Tenant-specific migrations
-        if (file_exists(database_path('migrations/tenant'))) {
-            \Log::info("STEP 3: Running tenant-specific migrations...");
-            $this->runMigration('database/migrations/tenant', 'Tenant', $tenant);
+private function createRequiredTablesWithSQL(): void
+{
+    $tables = [
+        'password_reset_tokens' => "
+            CREATE TABLE IF NOT EXISTS `password_reset_tokens` (
+                `email` varchar(255) NOT NULL,
+                `token` varchar(255) NOT NULL,
+                `created_at` timestamp NULL DEFAULT NULL,
+                PRIMARY KEY (`email`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ",
+        
+        'failed_jobs' => "
+            CREATE TABLE IF NOT EXISTS `failed_jobs` (
+                `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+                `uuid` varchar(255) NOT NULL,
+                `connection` text NOT NULL,
+                `queue` text NOT NULL,
+                `payload` longtext NOT NULL,
+                `exception` longtext NOT NULL,
+                `failed_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `failed_jobs_uuid_unique` (`uuid`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ",
+        
+        'permissions' => "
+            CREATE TABLE IF NOT EXISTS `permissions` (
+                `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+                `name` varchar(255) NOT NULL,
+                `guard_name` varchar(255) NOT NULL,
+                `created_at` timestamp NULL DEFAULT NULL,
+                `updated_at` timestamp NULL DEFAULT NULL,
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `permissions_name_guard_name_unique` (`name`,`guard_name`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ",
+        
+        'roles' => "
+            CREATE TABLE IF NOT EXISTS `roles` (
+                `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+                `name` varchar(255) NOT NULL,
+                `guard_name` varchar(255) NOT NULL,
+                `created_at` timestamp NULL DEFAULT NULL,
+                `updated_at` timestamp NULL DEFAULT NULL,
+                PRIMARY KEY (`id`),
+                UNIQUE KEY `roles_name_guard_name_unique` (`name`,`guard_name`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ",
+        
+        'model_has_permissions' => "
+            CREATE TABLE IF NOT EXISTS `model_has_permissions` (
+                `permission_id` bigint unsigned NOT NULL,
+                `model_type` varchar(255) NOT NULL,
+                `model_id` bigint unsigned NOT NULL,
+                PRIMARY KEY (`permission_id`,`model_id`,`model_type`),
+                KEY `model_has_permissions_model_id_model_type_index` (`model_id`,`model_type`),
+                CONSTRAINT `model_has_permissions_permission_id_foreign` 
+                FOREIGN KEY (`permission_id`) REFERENCES `permissions` (`id`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ",
+        
+        'model_has_roles' => "
+            CREATE TABLE IF NOT EXISTS `model_has_roles` (
+                `role_id` bigint unsigned NOT NULL,
+                `model_type` varchar(255) NOT NULL,
+                `model_id` bigint unsigned NOT NULL,
+                PRIMARY KEY (`role_id`,`model_id`,`model_type`),
+                KEY `model_has_roles_model_id_model_type_index` (`model_id`,`model_type`),
+                CONSTRAINT `model_has_roles_role_id_foreign` 
+                FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ",
+        
+        'role_has_permissions' => "
+            CREATE TABLE IF NOT EXISTS `role_has_permissions` (
+                `permission_id` bigint unsigned NOT NULL,
+                `role_id` bigint unsigned NOT NULL,
+                PRIMARY KEY (`permission_id`,`role_id`),
+                KEY `role_has_permissions_role_id_foreign` (`role_id`),
+                CONSTRAINT `role_has_permissions_permission_id_foreign` 
+                FOREIGN KEY (`permission_id`) REFERENCES `permissions` (`id`) ON DELETE CASCADE,
+                CONSTRAINT `role_has_permissions_role_id_foreign` 
+                FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        "
+    ];
+    
+    foreach ($tables as $tableName => $sql) {
+        try {
+            DB::connection('tenant')->statement($sql);
+            \Log::info("✓ Table created: {$tableName}");
+        } catch (\Exception $e) {
+            \Log::error("✗ Failed to create table {$tableName}: " . $e->getMessage());
+            // Continue with other tables
         }
-
-        \Log::info("--- All migrations completed ---");
     }
+}
 
     private function runMigration(string $path, string $label, Tenant $tenant): void
     {
@@ -292,4 +383,43 @@ class TenantService
             throw $e;
         }
     }
+    // Add this method to your TenantService class
+private function createTenantUsersTable(): void
+{
+    \Log::info("Creating users table for tenant...");
+    
+    // Check if users table already exists
+    $tables = DB::connection('tenant')->select('SHOW TABLES');
+    $dbName = DB::connection('tenant')->getDatabaseName();
+    $key = "Tables_in_{$dbName}";
+    
+    $existingTables = array_map(function($table) use ($key) {
+        return $table->$key;
+    }, $tables);
+    
+    if (in_array('users', $existingTables)) {
+        \Log::info("Users table already exists");
+        return;
+    }
+    
+    // Create users table with SQL
+    DB::connection('tenant')->statement("
+        CREATE TABLE `users` (
+            `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+            `name` varchar(255) NOT NULL,
+            `email` varchar(255) NOT NULL,
+            `email_verified_at` timestamp NULL DEFAULT NULL,
+            `password` varchar(255) NOT NULL,
+            `remember_token` varchar(100) DEFAULT NULL,
+            `tenant_id` bigint unsigned DEFAULT NULL,
+            `created_at` timestamp NULL DEFAULT NULL,
+            `updated_at` timestamp NULL DEFAULT NULL,
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `users_email_unique` (`email`),
+            KEY `users_tenant_id_index` (`tenant_id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ");
+    
+    \Log::info("✓ Users table created successfully");
+}
 }
