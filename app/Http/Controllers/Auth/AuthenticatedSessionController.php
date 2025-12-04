@@ -22,25 +22,36 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
-    {
-        $request->authenticate();
+  public function store(LoginRequest $request): RedirectResponse
+{
+    $request->authenticate();
 
-        $request->session()->regenerate();
+    $request->session()->regenerate();
 
-        $user = auth()->user();
+    $user = auth()->user();
+    
+    // Check if user has super-admin role in CENTRAL database
+    if ($user->hasRole('super-admin')) {
+        return redirect()->route('admin.dashboard');
+    }
+    
+    // For company users, we need to check their tenant and redirect accordingly
+    if ($user->tenant) {
+        // Switch to tenant database to check roles
+        $tenant = $user->tenant;
+        \App\Services\TenantService::switchToTenant($tenant);
         
-        // Redirect based on role
-        if ($user->hasRole('super-admin')) {
-            return redirect()->route('admin.dashboard');
-        }
-        
-        if ($user->tenant) {
+        // Check if user has company-admin role in TENANT database
+        if ($user->hasRole('company-admin')) {
+            \App\Services\TenantService::switchToCentral();
             return redirect()->route('company.dashboard', ['tenant' => $user->tenant->domain]);
         }
-
-        return redirect()->intended(route('dashboard', absolute: false));
+        
+        \App\Services\TenantService::switchToCentral();
     }
+
+    return redirect()->intended(route('dashboard', absolute: false));
+}
 
     /**
      * Destroy an authenticated session.

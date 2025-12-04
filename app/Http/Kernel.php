@@ -33,6 +33,7 @@ class Kernel extends HttpKernel
     ];
 
     protected $routeMiddleware = [
+        'tenant' => \App\Http\Middleware\TenantMiddleware::class,
         'auth' => \App\Http\Middleware\Authenticate::class,
         'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
         'auth.session' => \Illuminate\Session\Middleware\AuthenticateSession::class,
@@ -50,6 +51,6 @@ class Kernel extends HttpKernel
         'role_or_permission' => \Spatie\Permission\Middlewares\RoleOrPermissionMiddleware::class,
 
         // TENANT
-        'tenant' => \App\Http\Middleware\EnsureTenantIsSet::class,
+        // 'tenant' => \App\Http\Middleware\EnsureTenantIsSet::class,
     ];
 }

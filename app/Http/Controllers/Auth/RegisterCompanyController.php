@@ -24,62 +24,63 @@ class RegisterCompanyController extends Controller
         return view('auth.register');
     }
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'company_name'   => 'required|string|max:255',
-            'company_email'  => 'required|email|max:255',
-            'company_phone'  => 'required|string|max:20',
-            'subdomain'      => 'required|alpha_dash|unique:tenants,domain',
-            'name'           => 'required|string|max:255',
-            'email'          => 'required|email',
-            'password'       => 'required|min:8|confirmed',
-            'plan'           => 'required|in:free,standard,premium',
-            'terms'          => 'required|accepted'
+   public function store(Request $request)
+{
+    $request->validate([
+        'company_name'   => 'required|string|max:255',
+        'company_email'  => 'required|email|max:255',
+        'company_phone'  => 'required|string|max:20',
+        'subdomain'      => 'required|alpha_dash|unique:tenants,domain',
+        'name'           => 'required|string|max:255',
+        'email'          => 'required|email|unique:users,email',
+        'password'       => 'required|min:8|confirmed',
+        'plan'           => 'required|in:free,standard,premium',
+        'terms'          => 'required|accepted'
+    ]);
+
+    $tenant = null;
+
+    try {
+        $tenant = $this->tenantService->create(
+            $request->company_name,
+            $request->subdomain,
+            $request->company_email,
+            $request->company_phone
+        );
+
+        TenantService::switchToTenant($tenant);
+
+        $user = User::create([
+            'name'       => $request->name,
+            'email'      => $request->email,
+            'password'   => Hash::make($request->password),
+            'tenant_id'  => $tenant->id,
         ]);
 
-        $tenant = null;
+        Role::firstOrCreate([
+            'name'       => 'company-admin',
+            'guard_name' => 'web'
+        ]);
 
-        try {
-            $tenant = $this->tenantService->create(
-                $request->company_name,
-                $request->subdomain,
-                $request->company_email,
-                $request->company_phone
-            );
+        $user->assignRole('company-admin');
 
-            TenantService::switchToTenant($tenant);
+        auth()->login($user);
+        TenantService::switchToCentral();
 
-            $user = User::create([
-                'name'       => $request->name,
-                'email'      => $request->email,
-                'password'   => Hash::make($request->password),
-                'tenant_id'  => $tenant->id,
-            ]);
+        // FIXED: Use route() helper instead of direct URL
+        return redirect()->route('company.dashboard', ['tenant' => $tenant->domain])
+            ->with('success', 'Company registered successfully!');
 
-            Role::firstOrCreate([
-                'name'       => 'company-admin',
-                'guard_name' => 'web'
-            ]);
-
-            $user->assignRole('company-admin');
-
-            auth()->login($user);
-            TenantService::switchToCentral();
-
-            return redirect("/company/{$request->subdomain}/dashboard")
-                ->with('success', 'Company registered successfully!');
-
-        } catch (\Exception $e) {
-            if ($tenant) {
-                TenantService::dropDatabase($tenant);
-                $tenant->delete();
-            }
-            TenantService::switchToCentral();
-
-            return back()->withInput()->withErrors([
-                'error' => 'Registration failed: ' . $e->getMessage()
-            ]);
+    } catch (\Exception $e) {
+        if ($tenant) {
+            TenantService::dropDatabase($tenant);
+            $tenant->delete();
         }
+        TenantService::switchToCentral();
+
+        return back()->withInput()->withErrors([
+            'error' => 'Registration failed: ' . $e->getMessage()
+        ]);
     }
+}
 }
