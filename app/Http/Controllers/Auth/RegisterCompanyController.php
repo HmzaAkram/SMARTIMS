@@ -24,7 +24,7 @@ class RegisterCompanyController extends Controller
         return view('auth.register');
     }
 
-   public function store(Request $request)
+public function store(Request $request)
 {
     $request->validate([
         'company_name'   => 'required|string|max:255',
@@ -41,6 +41,7 @@ class RegisterCompanyController extends Controller
     $tenant = null;
 
     try {
+        // Create tenant
         $tenant = $this->tenantService->create(
             $request->company_name,
             $request->subdomain,
@@ -48,34 +49,56 @@ class RegisterCompanyController extends Controller
             $request->company_phone
         );
 
-        TenantService::switchToTenant($tenant);
-
-        $user = User::create([
+        // Create user in CENTRAL database FIRST (important!)
+        $centralUser = \App\Models\User::create([
             'name'       => $request->name,
             'email'      => $request->email,
             'password'   => Hash::make($request->password),
             'tenant_id'  => $tenant->id,
+            'email_verified_at' => now(),
         ]);
 
-        Role::firstOrCreate([
-            'name'       => 'company-admin',
+        // Now switch to tenant database
+        TenantService::switchToTenant($tenant);
+
+        // Create user in TENANT database
+        $tenantUser = \App\Models\User::create([
+            'name'       => $request->name,
+            'email'      => $request->email,
+            'password'   => Hash::make($request->password),
+            'tenant_id'  => $tenant->id,
+            'email_verified_at' => now(),
+        ]);
+
+        // Assign company-admin role in TENANT database
+        $role = \Spatie\Permission\Models\Role::firstOrCreate([
+            'name' => 'company-admin',
             'guard_name' => 'web'
         ]);
+        
+        $tenantUser->assignRole($role);
 
-        $user->assignRole('company-admin');
-
-        auth()->login($user);
+        // Switch back to central
         TenantService::switchToCentral();
 
-        // FIXED: Use route() helper instead of direct URL
+        // Login the CENTRAL user (not tenant user)
+        auth()->login($centralUser);
+
         return redirect()->route('company.dashboard', ['tenant' => $tenant->domain])
             ->with('success', 'Company registered successfully!');
 
     } catch (\Exception $e) {
+        \Log::error('Registration failed: ' . $e->getMessage());
+        
         if ($tenant) {
-            TenantService::dropDatabase($tenant);
-            $tenant->delete();
+            try {
+                TenantService::dropDatabase($tenant);
+                $tenant->delete();
+            } catch (\Exception $cleanupError) {
+                \Log::error('Cleanup error: ' . $cleanupError->getMessage());
+            }
         }
+        
         TenantService::switchToCentral();
 
         return back()->withInput()->withErrors([
