@@ -4,14 +4,6 @@ use App\Http\Controllers\Auth\RegisterCompanyController;
 use App\Http\Controllers\SuperAdmin\DashboardController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/view-log', function() {
-    $logFile = storage_path('logs/laravel.log');
-    if (file_exists($logFile)) {
-        return nl2br(file_get_contents($logFile));
-    }
-    return 'No log file';
-});
-
 Route::get('/', function () {
     return view('welcome');
 });
@@ -38,11 +30,11 @@ Route::middleware(['auth'])->get('/home', function () {
     }
     
     if ($user->tenant) {
-        return redirect()->route('company.dashboard', ['tenant' => $user->tenant->slug]);
+        return redirect()->route('company.dashboard', ['tenant' => $user->tenant->domain]);
     }
     
     return redirect('/');
 })->name('home');
 
-// Include company routes
+// Include company routes - MUST BE LAST
 require __DIR__.'/company.php';

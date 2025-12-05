@@ -13,7 +13,51 @@ use App\Http\Controllers\Company\CustomerController;
 use App\Http\Controllers\Company\ReportController;
 use App\Http\Controllers\Company\SettingsController;
 
-Route::middleware(['auth', 'tenant'])->prefix('{tenant}')->group(function () {
+// Test route - keep only one specific test
+Route::get('/test-company-file', function() {
+    return "Company routes file is loaded!";
+});
+
+// REMOVE or COMMENT OUT these conflicting routes:
+// Route::get('/test-no-middleware/{tenant}', function($tenant) {
+//     return response()->json([
+//         'success' => true,
+//         'tenant' => $tenant,
+//         'message' => 'Route without middleware works'
+//     ]);
+// });
+
+// Route::prefix('{tenant}')->group(function () {
+//     Route::get('/test-no-auth', function($tenant) {
+//         return response()->json([
+//             'success' => true,
+//             'tenant' => $tenant,
+//             'message' => 'Route without any middleware'
+//         ]);
+//     });
+// });
+
+// Route::middleware(['auth'])->prefix('{tenant}')->group(function () {
+//     Route::get('/test-no-tenant-middleware', function($tenant) {
+//         return response()->json([
+//             'success' => true,
+//             'tenant' => $tenant,
+//             'message' => 'Route without tenant middleware'
+//         ]);
+//     });
+// });
+
+// ONLY KEEP THIS MAIN ROUTE GROUP:
+Route::middleware(['auth', 'tenant'])->prefix('company/{tenant}')->group(function () {
+    
+    // Debug test route - keep this for testing
+    Route::get('/debug', function($tenant) {
+        return response()->json([
+            'tenant' => $tenant,
+            'message' => 'Debug route working',
+            'user' => auth()->user() ? auth()->user()->email : 'Not logged in'
+        ]);
+    })->name('company.debug');
     
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('company.dashboard');
