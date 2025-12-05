@@ -35,6 +35,30 @@ Route::middleware(['auth'])->get('/home', function () {
     
     return redirect('/');
 })->name('home');
+// Test route WITHOUT any middleware
+Route::get('/simple-test/{param1}/{param2}', function($param1, $param2) {
+    return "Test: " . $param1 . "/" . $param2;
+});
 
-// Include company routes - MUST BE LAST
+// In web.php
+Route::get('/test-company-pattern/{tenant}/debug', function($tenant) {
+    return "Pattern test: " . $tenant;
+})->middleware(['auth', 'tenant']);
+
+Route::get('/test-tenant-middleware/{tenant}/debug', function($tenant) {
+    // Manually test tenant
+    $tenantModel = \App\Models\Tenant::where('domain', $tenant)->first();
+    
+    if (!$tenantModel) {
+        return "Tenant not found: " . $tenant;
+    }
+    
+    return response()->json([
+        'success' => true,
+        'tenant' => $tenant,
+        'tenant_id' => $tenantModel->id,
+        'database' => $tenantModel->database,
+        'message' => 'Direct route test'
+    ]);
+})->middleware(['auth', 'tenant']);  // Test with tenant middleware
 require __DIR__.'/company.php';
