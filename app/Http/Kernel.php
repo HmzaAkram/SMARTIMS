@@ -49,7 +49,7 @@ protected $routeMiddleware = [
     'permission' => \Spatie\Permission\Middlewares\PermissionMiddleware::class,
     'role_or_permission' => \Spatie\Permission\Middlewares\RoleOrPermissionMiddleware::class,
 
-    // Tenant middleware - ONLY ONE DEFINITION
-    'tenant' => \App\Http\Middleware\TenantMiddleware::class,
+    // Tenant middleware - use ONLY ONE
+    'tenant' => \App\Http\Middleware\EnsureTenantIsSet::class, // Changed to EnsureTenantIsSet
 ];
 }
