@@ -96,12 +96,15 @@ Route::middleware(['auth', 'tenant'])->prefix('company/{tenant}')->group(functio
     ]);
     
     // Stock Movements
-    Route::resource('stock-movements', StockMovementController::class)->names([
-        'index' => 'company.stock-movements.index',
-        'create' => 'company.stock-movements.create',
-        'store' => 'company.stock-movements.store',
-        'show' => 'company.stock-movements.show',
-    ]);
+Route::resource('stock-movements', StockMovementController::class)->names([
+    'index' => 'company.stock-movements.index',
+    'create' => 'company.stock-movements.create',
+    'store' => 'company.stock-movements.store',
+    'show' => 'company.stock-movements.show',
+    'edit' => 'company.stock-movements.edit',  // Make sure this line exists
+    'update' => 'company.stock-movements.update',
+    'destroy' => 'company.stock-movements.destroy',
+]);
     
     // Orders
     Route::resource('orders', OrderController::class)->names([
@@ -115,7 +118,20 @@ Route::middleware(['auth', 'tenant'])->prefix('company/{tenant}')->group(functio
     ]);
     
     // Sales
-    Route::get('sales', [SalesController::class, 'index'])->name('company.sales.index');
+   // Sales routes
+    Route::prefix('sales')->name('company.sales.')->group(function () {
+        Route::get('/', [SalesController::class, 'index'])->name('index');
+        Route::get('/create', [SalesController::class, 'create'])->name('create');
+        Route::post('/', [SalesController::class, 'store'])->name('store');
+        Route::get('/{order}', [SalesController::class, 'show'])->name('show');
+        Route::get('/{order}/edit', [SalesController::class, 'edit'])->name('edit');
+        Route::put('/{order}', [SalesController::class, 'update'])->name('update');
+        Route::delete('/{order}', [SalesController::class, 'destroy'])->name('destroy');
+        Route::get('/{order}/print-invoice', [SalesController::class, 'printInvoice'])->name('print.invoice');
+        Route::post('/{order}/update-status', [SalesController::class, 'updateStatus'])->name('update.status');
+        Route::get('/report', [SalesController::class, 'report'])->name('report');
+        Route::get('/items', [SalesController::class, 'getItems'])->name('items.get');
+    });
     
     // Suppliers
     Route::resource('suppliers', SupplierController::class)->names([
