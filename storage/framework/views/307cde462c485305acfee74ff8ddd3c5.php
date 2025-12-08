@@ -18,8 +18,8 @@
                 </svg>
                 Export
             </button>
-            <a href="/company/<?php echo e(request()->route('tenant')); ?>/inventory/items/create" 
-               class="inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-sm font-medium rounded-xl transition-all-300 hover:shadow-lg">
+            <a href="/company/<?php echo e(request()->route('tenant')); ?>/items/create" 
+               class="inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-gray text-sm font-medium rounded-xl transition-all-300 hover:shadow-lg">
                 <svg class="w-4 h-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z"/>
                 </svg>
