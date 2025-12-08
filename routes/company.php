@@ -160,6 +160,9 @@ Route::get('suppliers/get/list', [SupplierController::class, 'getSuppliers'])->n
         'destroy' => 'company.customers.destroy',
     ]);
     
+    Route::post('/customers/{customer}/toggle-status', [\App\Http\Controllers\Company\CustomerController::class, 'toggleStatus'])->name('company.customers.toggle-status');
+    Route::get('/customers-get', [\App\Http\Controllers\Company\CustomerController::class, 'getCustomers'])->name('company.customers.get');
+    Route::get('/customers/{customer}/details', [\App\Http\Controllers\Company\CustomerController::class, 'getCustomerDetails'])->name('company.customers.details');
     // Reports
     Route::prefix('reports')->name('company.reports.')->group(function () {
         Route::get('/inventory', [ReportController::class, 'inventory'])->name('inventory');
