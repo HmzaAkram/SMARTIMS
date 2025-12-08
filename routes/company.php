@@ -134,15 +134,20 @@ Route::resource('stock-movements', StockMovementController::class)->names([
     });
     
     // Suppliers
-    Route::resource('suppliers', SupplierController::class)->names([
-        'index' => 'company.suppliers.index',
-        'create' => 'company.suppliers.create',
-        'store' => 'company.suppliers.store',
-        'show' => 'company.suppliers.show',
-        'edit' => 'company.suppliers.edit',
-        'update' => 'company.suppliers.update',
-        'destroy' => 'company.suppliers.destroy',
-    ]);
+// Suppliers
+Route::resource('suppliers', SupplierController::class)->names([
+    'index' => 'company.suppliers.index',
+    'create' => 'company.suppliers.create',
+    'store' => 'company.suppliers.store',
+    'show' => 'company.suppliers.show',
+    'edit' => 'company.suppliers.edit',
+    'update' => 'company.suppliers.update',
+    'destroy' => 'company.suppliers.destroy',
+]);
+
+// Supplier additional routes
+Route::post('suppliers/{supplier}/toggle-status', [SupplierController::class, 'toggleStatus'])->name('company.suppliers.toggle-status');
+Route::get('suppliers/get/list', [SupplierController::class, 'getSuppliers'])->name('company.suppliers.get');
     
     // Customers
     Route::resource('customers', CustomerController::class)->names([
