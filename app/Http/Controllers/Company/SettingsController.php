@@ -13,25 +13,24 @@ class SettingsController extends Controller
     /**
      * Display settings page
      */
-    public function index($tenant)
-    {
-        // Get the tenant
-        $tenantModel = Tenant::where('domain', $tenant)
-            ->orWhere('slug', $tenant)
-            ->firstOrFail();
-        
-        // Get tenant settings from the central database
-        $settings = $tenantModel;
-        
-        // Get warehouse options for default warehouse setting
-        $warehouses = DB::connection('tenant')->table('warehouses')
-            ->where('tenant_id', $tenantModel->id)
-            ->where('is_active', true)
-            ->get();
-        
-        return view('settings.index', compact('tenant', 'settings', 'warehouses'));
-    }
-
+public function index($tenant)
+{
+    // Get the tenant
+    $tenantModel = Tenant::where('domain', $tenant)
+        ->orWhere('slug', $tenant)
+        ->firstOrFail();
+    
+    // Get tenant settings from the central database
+    $settings = $tenantModel;
+    
+    // Get warehouse options for default warehouse setting
+    // Since this is tenant database, all warehouses belong to this tenant
+    $warehouses = DB::connection('tenant')->table('warehouses')
+        ->where('status', 'active') // Use 'status' column instead of 'is_active'
+        ->get();
+    
+    return view('settings.index', compact('tenant', 'settings', 'warehouses'));
+}
     /**
      * Update settings
      */

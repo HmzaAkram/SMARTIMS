@@ -171,6 +171,6 @@ Route::get('suppliers/get/list', [SupplierController::class, 'getSuppliers'])->n
     });
     
     // Settings
-    Route::get('settings', [SettingsController::class, 'index'])->name('company.settings');
-    Route::put('settings', [SettingsController::class, 'update'])->name('company.settings.update');
+   Route::get('settings', [SettingsController::class, 'index'])->name('company.settings');
+   Route::put('settings', [SettingsController::class, 'update'])->name('company.settings.update');
 });
