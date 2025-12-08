@@ -1,8 +1,8 @@
-@extends('layouts.company')
 
-@section('title', 'Reports - SmartIMS')
 
-@section('content')
+<?php $__env->startSection('title', 'Reports - SmartIMS'); ?>
+
+<?php $__env->startSection('content'); ?>
 <div class="space-y-6">
     <!-- Page Header -->
     <div>
@@ -84,9 +84,9 @@
                         <label for="warehouse" class="block text-sm font-medium text-gray-900 dark:text-white">Warehouse</label>
                         <select id="warehouse" class="mt-2 block w-full rounded-md border-0 py-2 px-3 text-gray-900 dark:text-white dark:bg-gray-700 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm">
                             <option value="">All Warehouses</option>
-                            @foreach($warehouses ?? [] as $warehouse)
-                                <option value="{{ $warehouse->id }}">{{ $warehouse->name }}</option>
-                            @endforeach
+                            <?php $__currentLoopData = $warehouses ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $warehouse): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($warehouse->id); ?>"><?php echo e($warehouse->name); ?></option>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </select>
                     </div>
 
@@ -114,9 +114,9 @@
                             <label for="category" class="block text-sm font-medium text-gray-900 dark:text-white">Category</label>
                             <select id="category" class="mt-2 block w-full rounded-md border-0 py-2 px-3 text-gray-900 dark:text-white dark:bg-gray-700 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm">
                                 <option value="">All Categories</option>
-                                @foreach($categories ?? [] as $category)
-                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
-                                @endforeach
+                                <?php $__currentLoopData = $categories ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $category): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($category->id); ?>"><?php echo e($category->name); ?></option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
                         </div>
 
@@ -167,35 +167,39 @@
                     </tr>
                 </thead>
                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                    @forelse($recentReports ?? [] as $report)
+                    <?php $__empty_1 = true; $__currentLoopData = $recentReports ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $report): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
                                 <svg class="h-5 w-5 text-gray-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
-                                <span class="text-sm font-medium text-gray-900 dark:text-white">{{ $report->name }}</span>
+                                <span class="text-sm font-medium text-gray-900 dark:text-white"><?php echo e($report->name); ?></span>
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                            {{ $report->type }}
+                            <?php echo e($report->type); ?>
+
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                            {{ $report->date_range }}
+                            <?php echo e($report->date_range); ?>
+
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                            {{ $report->created_at }}
+                            <?php echo e($report->created_at); ?>
+
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ring-1 ring-inset 
-                                {{ $report->format === 'pdf' ? 'bg-red-50 text-red-700 ring-red-600/10 dark:bg-red-900/20 dark:text-red-400 dark:ring-red-600/30' : 
+                                <?php echo e($report->format === 'pdf' ? 'bg-red-50 text-red-700 ring-red-600/10 dark:bg-red-900/20 dark:text-red-400 dark:ring-red-600/30' : 
                                    ($report->format === 'excel' ? 'bg-green-50 text-green-700 ring-green-600/10 dark:bg-green-900/20 dark:text-green-400 dark:ring-green-600/30' : 
-                                   'bg-blue-50 text-blue-700 ring-blue-600/10 dark:bg-blue-900/20 dark:text-blue-400 dark:ring-blue-600/30') }}">
-                                {{ strtoupper($report->format) }}
+                                   'bg-blue-50 text-blue-700 ring-blue-600/10 dark:bg-blue-900/20 dark:text-blue-400 dark:ring-blue-600/30')); ?>">
+                                <?php echo e(strtoupper($report->format)); ?>
+
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <a href="{{ $report->download_url }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3">
+                            <a href="<?php echo e($report->download_url); ?>" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-3">
                                 Download
                             </a>
                             <button type="button" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
@@ -203,13 +207,13 @@
                             </button>
                         </td>
                     </tr>
-                    @empty
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                     <tr>
                         <td colspan="6" class="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
                             No reports generated yet. Create your first report above.
                         </td>
                     </tr>
-                    @endforelse
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -228,7 +232,7 @@
         </div>
         <div class="p-6">
             <div class="space-y-4">
-                @forelse($scheduledReports ?? [] as $schedule)
+                <?php $__empty_1 = true; $__currentLoopData = $scheduledReports ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $schedule): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                 <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     <div class="flex items-center">
                         <div class="flex-shrink-0">
@@ -237,13 +241,14 @@
                             </svg>
                         </div>
                         <div class="ml-4">
-                            <h4 class="text-sm font-medium text-gray-900 dark:text-white">{{ $schedule->name }}</h4>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">{{ $schedule->type }} • {{ $schedule->frequency }} • {{ $schedule->format }}</p>
+                            <h4 class="text-sm font-medium text-gray-900 dark:text-white"><?php echo e($schedule->name); ?></h4>
+                            <p class="text-sm text-gray-500 dark:text-gray-400"><?php echo e($schedule->type); ?> • <?php echo e($schedule->frequency); ?> • <?php echo e($schedule->format); ?></p>
                         </div>
                     </div>
                     <div class="flex items-center space-x-2">
-                        <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium {{ $schedule->active ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400' }}">
-                            {{ $schedule->active ? 'Active' : 'Inactive' }}
+                        <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium <?php echo e($schedule->active ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400' : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-400'); ?>">
+                            <?php echo e($schedule->active ? 'Active' : 'Inactive'); ?>
+
                         </span>
                         <button type="button" class="p-2 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300">
                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -257,7 +262,7 @@
                         </button>
                     </div>
                 </div>
-                @empty
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                 <div class="text-center py-8">
                     <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -265,9 +270,10 @@
                     <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No scheduled reports</h3>
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Get started by scheduling your first automated report.</p>
                 </div>
-                @endforelse
+                <?php endif; ?>
             </div>
         </div>
     </div>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.company', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\HP\Documents\GitHub\SMARTIMS\resources\views/reports/index.blade.php ENDPATH**/ ?>
