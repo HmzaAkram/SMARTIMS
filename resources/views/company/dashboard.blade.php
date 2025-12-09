@@ -360,9 +360,20 @@
 </div>
     </div>
 </div>
-
 @push('scripts')
 <script>
+// Pass PHP data to JavaScript
+const chartData = {
+    labels: @json($chartLabels),
+    stockIn: @json($stockInData),
+    stockOut: @json($stockOutData),
+    stockDistribution: @json([
+        $stockDistribution['in_stock'] ?? 0,
+        $stockDistribution['low_stock'] ?? 0,
+        $stockDistribution['out_of_stock'] ?? 0
+    ])
+};
+
 // Wait for Alpine.js to be ready
 document.addEventListener('alpine:init', () => {
     // Initialize charts when they are visible
@@ -377,10 +388,10 @@ document.addEventListener('alpine:init', () => {
             new Chart(inventoryCtx.getContext('2d'), {
                 type: 'line',
                 data: {
-                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    labels: chartData.labels,
                     datasets: [{
                         label: 'Stock In',
-                        data: [150, 200, 180, 220, 250, 210, 190],
+                        data: chartData.stockIn,
                         borderColor: 'rgb(34, 197, 94)',
                         backgroundColor: 'rgba(34, 197, 94, 0.1)',
                         borderWidth: 3,
@@ -392,7 +403,7 @@ document.addEventListener('alpine:init', () => {
                         pointRadius: 5
                     }, {
                         label: 'Stock Out',
-                        data: [100, 120, 150, 130, 140, 160, 120],
+                        data: chartData.stockOut,
                         borderColor: 'rgb(239, 68, 68)',
                         backgroundColor: 'rgba(239, 68, 68, 0.1)',
                         borderWidth: 3,
@@ -449,7 +460,7 @@ document.addEventListener('alpine:init', () => {
                 data: {
                     labels: ['In Stock', 'Low Stock', 'Out of Stock'],
                     datasets: [{
-                        data: [68, 22, 10],
+                        data: chartData.stockDistribution,
                         backgroundColor: [
                             'rgb(59, 130, 246)',
                             'rgb(234, 179, 8)',
@@ -467,6 +478,18 @@ document.addEventListener('alpine:init', () => {
                     plugins: {
                         legend: {
                             display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += context.parsed + '%';
+                                    return label;
+                                }
+                            }
                         }
                     }
                 }
