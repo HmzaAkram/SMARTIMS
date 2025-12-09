@@ -333,29 +333,31 @@
     </div>
 </div>
 
-        <!-- System Status -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">System Status</h3>
-            <div class="space-y-4">
-                <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Storage</span>
-                    <span class="text-sm font-medium text-gray-900 dark:text-white">68%</span>
-                </div>
-                <div class="w-full bg-gray-200 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
-                    <div class="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" style="width: 68%"></div>
-                </div>
-                
-                <div class="flex items-center justify-between mt-6">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Active Users</span>
-                    <span class="text-sm font-medium text-gray-900 dark:text-white">{{ rand(5, 20) }}</span>
-                </div>
-                
-                <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Uptime</span>
-                    <span class="text-sm font-medium text-gray-900 dark:text-white">99.9%</span>
-                </div>
-            </div>
+       <!-- System Status -->
+<div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl">
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">System Status</h3>
+    <div class="space-y-4">
+        <div class="flex items-center justify-between">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Today's Sales</span>
+            <span class="text-sm font-medium text-gray-900 dark:text-white">${{ number_format($todaySales) }}</span>
         </div>
+        
+        <div class="flex items-center justify-between">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Monthly Sales</span>
+            <span class="text-sm font-medium text-gray-900 dark:text-white">${{ number_format($monthlySales) }}</span>
+        </div>
+        
+        <div class="flex items-center justify-between mt-6">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Pending Orders</span>
+            <span class="text-sm font-medium text-gray-900 dark:text-white">{{ $pendingOrders }}</span>
+        </div>
+        
+        <div class="flex items-center justify-between">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Completed Orders</span>
+            <span class="text-sm font-medium text-gray-900 dark:text-white">{{ $completedOrders }}</span>
+        </div>
+    </div>
+</div>
     </div>
 </div>
 
