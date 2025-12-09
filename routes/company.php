@@ -173,4 +173,29 @@ Route::get('suppliers/get/list', [SupplierController::class, 'getSuppliers'])->n
     // Settings
    Route::get('settings', [SettingsController::class, 'index'])->name('company.settings');
    Route::put('settings', [SettingsController::class, 'update'])->name('company.settings.update');
+// Add to routes/web.php temporarily
+Route::get('/debug-items-table', function() {
+    try {
+        // Switch to tenant connection
+        config(['database.default' => 'tenant']);
+        \DB::reconnect();
+        
+        // Check items table structure
+        $columns = \Schema::getColumnListing('items');
+        
+        // Also check items data
+        $items = \DB::table('items')->select('id', 'name', 'sku')->limit(5)->get();
+        
+        return response()->json([
+            'columns' => $columns,
+            'sample_items' => $items,
+            'has_stock_column' => in_array('stock', $columns),
+            'has_quantity_column' => in_array('quantity', $columns)
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()]);
+    }
+});
+
 });
