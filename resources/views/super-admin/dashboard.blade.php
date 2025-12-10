@@ -3,117 +3,140 @@
 @section('title', 'Super Admin Dashboard - SmartIMS')
 
 @section('content')
-<div class="space-y-6">
-    <!-- Page Header -->
-    <div class="bg-white rounded-lg shadow-sm p-6">
-        <div class="md:flex md:items-center md:justify-between">
-            <div class="min-w-0 flex-1">
-                <h2 class="text-3xl font-bold text-gray-900">
-                    Super Admin Dashboard
-                </h2>
-                <p class="mt-2 text-sm text-gray-600">Welcome back, {{ auth()->user()->name }}! Here's what's happening today.</p>
-            </div>
-            <div class="mt-4 flex md:ml-4 md:mt-0 space-x-3">
-                <button type="button" onclick="exportReport()" class="inline-flex items-center rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 hover:ring-gray-400 transition-all duration-150">
-                    <svg class="mr-2 h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    Export Report
-                </button>
-                <button type="button" onclick="addCompany()" class="inline-flex items-center rounded-lg bg-gradient-to-r from-indigo-600 to-indigo-700 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:from-indigo-700 hover:to-indigo-800 transition-all duration-150">
-                    <svg class="mr-2 h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-                    </svg>
-                    Add Company
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+<div x-data="dashboard()" class="space-y-6">
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <!-- Total Companies -->
-        <div class="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl shadow-lg p-4 flex items-center justify-between h-24 hover:shadow-xl transition-shadow duration-200">
-            <div class="flex flex-col justify-center">
-                <p class="text-indigo-100 text-xs font-semibold uppercase tracking-wider">Total Companies</p>
-                <div class="flex items-baseline mt-1">
-                    <p class="text-white text-2xl font-bold">{{ $totalCompanies }}</p>
-                    @if(isset($companiesGrowthPercent) && $companiesGrowthPercent > 0)
-                        <span class="ml-2 text-indigo-200 text-xs font-bold">↑{{ $companiesGrowthPercent }}%</span>
-                    @endif
+        <div class="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl shadow-xl p-6 text-white relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-24 h-24 -mt-6 -mr-6 bg-white/10 rounded-full"></div>
+            <div class="relative z-10">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-indigo-100 text-sm font-medium">Total Companies</p>
+                        <p class="text-3xl font-bold mt-2">{{ number_format($totalCompanies) }}</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                        <i class="fas fa-building text-xl"></i>
+                    </div>
                 </div>
-            </div>
-            <div class="bg-white/20 rounded-full p-2.5">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
+                <div class="mt-4 flex items-center">
+                    @if($companiesGrowthPercent >= 0)
+                        <span class="text-green-300 text-sm font-medium">
+                            <i class="fas fa-arrow-up mr-1"></i> {{ $companiesGrowthPercent }}%
+                        </span>
+                    @else
+                        <span class="text-red-300 text-sm font-medium">
+                            <i class="fas fa-arrow-down mr-1"></i> {{ abs($companiesGrowthPercent) }}%
+                        </span>
+                    @endif
+                    <span class="text-indigo-200 text-sm ml-2">from last month</span>
+                </div>
             </div>
         </div>
 
         <!-- Active Subscriptions -->
-        <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-4 flex items-center justify-between h-24 hover:shadow-xl transition-shadow duration-200">
-            <div class="flex flex-col justify-center">
-                <p class="text-green-100 text-xs font-semibold uppercase tracking-wider">Active Subscriptions</p>
-                <p class="text-white text-2xl font-bold mt-1">{{ $activeSubscriptions }}</p>
-            </div>
-            <div class="bg-white/20 rounded-full p-2.5">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+        <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl shadow-xl p-6 text-white relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-24 h-24 -mt-6 -mr-6 bg-white/10 rounded-full"></div>
+            <div class="relative z-10">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-green-100 text-sm font-medium">Active Subscriptions</p>
+                        <p class="text-3xl font-bold mt-2">{{ number_format($activeSubscriptions) }}</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                        <i class="fas fa-check-circle text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <span class="text-green-300 text-sm font-medium">
+                        {{ $trialingSubscriptions }} in trial
+                    </span>
+                </div>
             </div>
         </div>
 
         <!-- Monthly Revenue -->
-        <div class="bg-gradient-to-br from-yellow-500 to-orange-500 rounded-xl shadow-lg p-4 flex items-center justify-between h-24 hover:shadow-xl transition-shadow duration-200">
-            <div class="flex flex-col justify-center">
-                <p class="text-yellow-100 text-xs font-semibold uppercase tracking-wider">Monthly Revenue</p>
-                <p class="text-white text-2xl font-bold mt-1">${{ number_format($monthlyRevenue) }}</p>
-            </div>
-            <div class="bg-white/20 rounded-full p-2.5">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+        <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl shadow-xl p-6 text-white relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-24 h-24 -mt-6 -mr-6 bg-white/10 rounded-full"></div>
+            <div class="relative z-10">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-purple-100 text-sm font-medium">Monthly Revenue</p>
+                        <p class="text-3xl font-bold mt-2">${{ number_format($monthlyRevenue) }}</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                        <i class="fas fa-dollar-sign text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4 flex items-center">
+                    @if($revenueGrowthPercent >= 0)
+                        <span class="text-green-300 text-sm font-medium">
+                            <i class="fas fa-arrow-up mr-1"></i> {{ $revenueGrowthPercent }}%
+                        </span>
+                    @else
+                        <span class="text-red-300 text-sm font-medium">
+                            <i class="fas fa-arrow-down mr-1"></i> {{ abs($revenueGrowthPercent) }}%
+                        </span>
+                    @endif
+                    <span class="text-purple-200 text-sm ml-2">growth</span>
+                </div>
             </div>
         </div>
 
         <!-- Total Users -->
-        <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-4 flex items-center justify-between h-24 hover:shadow-xl transition-shadow duration-200">
-            <div class="flex flex-col justify-center">
-                <p class="text-purple-100 text-xs font-semibold uppercase tracking-wider">Total Users</p>
-                <p class="text-white text-2xl font-bold mt-1">{{ $totalUsers }}</p>
-            </div>
-            <div class="bg-white/20 rounded-full p-2.5">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
+        <div class="bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-2xl shadow-xl p-6 text-white relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-24 h-24 -mt-6 -mr-6 bg-white/10 rounded-full"></div>
+            <div class="relative z-10">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-cyan-100 text-sm font-medium">Total Users</p>
+                        <p class="text-3xl font-bold mt-2">{{ number_format($totalUsers) }}</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                        <i class="fas fa-users text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <span class="text-cyan-300 text-sm font-medium">
+                        {{ $platformStats['active_sessions'] ?? 0 }} active now
+                    </span>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Charts Grid -->
-    <div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Revenue Chart -->
-        <div class="rounded-lg bg-white p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
+        <div class="bg-white rounded-2xl shadow-lg p-6">
             <div class="flex items-center justify-between mb-6">
                 <div>
-                    <h3 class="text-lg font-semibold text-gray-900">Revenue Overview</h3>
-                    <p class="text-sm text-gray-500 mt-1">Monthly revenue trends</p>
+                    <h3 class="text-lg font-bold text-gray-900">Revenue Overview</h3>
+                    <p class="text-gray-600 text-sm mt-1">Monthly recurring revenue (MRR)</p>
                 </div>
-                <span class="text-xs font-medium text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">Last 6 months</span>
+                <div class="flex items-center space-x-2">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                        <i class="fas fa-chart-line mr-1"></i> Last 12 months
+                    </span>
+                </div>
             </div>
             <div class="h-72">
                 <canvas id="revenueChart"></canvas>
             </div>
         </div>
 
-        <!-- Companies Growth Chart -->
-        <div class="rounded-lg bg-white p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
+        <!-- Companies Growth -->
+        <div class="bg-white rounded-2xl shadow-lg p-6">
             <div class="flex items-center justify-between mb-6">
                 <div>
-                    <h3 class="text-lg font-semibold text-gray-900">Companies Growth</h3>
-                    <p class="text-sm text-gray-500 mt-1">New companies registered</p>
+                    <h3 class="text-lg font-bold text-gray-900">Companies Growth</h3>
+                    <p class="text-gray-600 text-sm mt-1">New companies registered</p>
                 </div>
-                <span class="text-xs font-medium text-green-600 bg-green-50 px-3 py-1 rounded-full">Last 6 months</span>
+                <div class="flex items-center space-x-2">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <i class="fas fa-building mr-1"></i> Monthly trend
+                    </span>
+                </div>
             </div>
             <div class="h-72">
                 <canvas id="companiesChart"></canvas>
@@ -121,209 +144,298 @@
         </div>
     </div>
 
-    <!-- Recent Companies Table -->
-    <div class="rounded-lg bg-white shadow-lg overflow-hidden">
-        <div class="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-5">
-            <div class="flex items-center justify-between">
+    <!-- Recent Activity & Quick Actions -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Recent Companies -->
+        <div class="lg:col-span-2 bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
                 <div>
-                    <h3 class="text-lg font-semibold text-white">Recent Companies</h3>
-                    <p class="text-sm text-indigo-100 mt-1">Latest registered companies</p>
+                    <h3 class="text-lg font-bold text-gray-900">Recent Companies</h3>
+                    <p class="text-gray-600 text-sm mt-1">Latest registered companies</p>
                 </div>
-                <button onclick="viewAllCompanies()" class="text-sm font-medium text-white hover:text-indigo-100 transition">
-                    View All
-                </button>
+                <a href="{{ route('admin.companies.index') }}" 
+                   class="text-sm font-medium text-indigo-600 hover:text-indigo-800">
+                    View All →
+                </a>
             </div>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Company</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Domain</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Plan</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Users</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Joined</th>
-                        <th class="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($recentCompanies as $company)
-                    <tr class="hover:bg-indigo-50 transition-colors duration-150">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center">
-                                <div class="h-12 w-12 flex-shrink-0">
-                                    <div class="h-12 w-12 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shadow-md">
-                                        <span class="text-white font-bold text-base">{{ strtoupper(substr($company->name, 0, 2)) }}</span>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Company</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Plan</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Users</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Joined</th>
+                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach($recentCompanies as $company)
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center mr-3">
+                                        <span class="text-white font-bold text-sm">{{ strtoupper(substr($company->name, 0, 2)) }}</span>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-gray-900">{{ $company->name }}</div>
+                                        <div class="text-sm text-gray-500">{{ $company->email }}</div>
                                     </div>
                                 </div>
-                                <div class="ml-4">
-                                    <div class="text-sm font-semibold text-gray-900">{{ $company->name }}</div>
-                                    <div class="text-xs text-gray-500">{{ $company->email }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium 
+                                    {{ $company->plan === 'Premium' ? 'bg-purple-100 text-purple-800' : 
+                                       ($company->plan === 'Business' ? 'bg-blue-100 text-blue-800' : 
+                                       'bg-gray-100 text-gray-800') }}">
+                                    {{ $company->plan }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium 
+                                    {{ $company->status === 'active' ? 'bg-green-100 text-green-800' : 
+                                       ($company->status === 'trialing' ? 'bg-yellow-100 text-yellow-800' : 
+                                       'bg-red-100 text-red-800') }}">
+                                    <span class="w-2 h-2 rounded-full mr-2 
+                                        {{ $company->status === 'active' ? 'bg-green-500' : 
+                                           ($company->status === 'trialing' ? 'bg-yellow-500' : 
+                                           'bg-red-500') }}"></span>
+                                    {{ ucfirst($company->status) }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <i class="fas fa-users text-gray-400 mr-2"></i>
+                                    <span class="font-medium">{{ $company->users_count }}</span>
                                 </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900 font-medium">{{ $company->domain }}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold bg-indigo-100 text-indigo-800">
-                                <svg class="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24 .588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3 .921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784 .57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81 .588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                </svg>
-                                {{ $company->plan }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold {{ $company->status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                <span class="mr-1 h-1.5 w-1.5 rounded-full {{ $company->status === 'active' ? 'bg-green-600' : 'bg-red-600' }}"></span>
-                                {{ ucfirst($company->status) }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center text-sm text-gray-900">
-                                <svg class="mr-1.5 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                                </svg>
-                                {{ $company->users_count }}
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ $company->created_at->format('M d, Y') }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button onclick="viewCompany({{ $company->id }})" class="text-indigo-600 hover:text-indigo-900 font-semibold transition">
-                                View Details
-                            </button>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="7" class="px-6 py-16 text-center">
-                            <svg class="mx-auto h-16 w-16 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                            </svg>
-                            <p class="mt-4 text-base font-medium text-gray-900">No companies found</p>
-                            <p class="mt-1 text-sm text-gray-500">Get started by adding your first company</p>
-                            <button onclick="addCompany()" class="mt-4 inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition">
-                                <svg class="mr-2 h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-                                </svg>
-                                Add Company
-                            </button>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ $company->created_at->format('M d, Y') }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <div class="flex items-center space-x-2">
+                                    <a href="{{ route('admin.companies.show', $company->id) }}" 
+                                       class="text-indigo-600 hover:text-indigo-900">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="#" class="text-gray-600 hover:text-gray-900">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="#" class="text-red-600 hover:text-red-900">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="bg-white rounded-2xl shadow-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-bold text-gray-900">Recent Activity</h3>
+                <p class="text-gray-600 text-sm mt-1">Platform activities</p>
+            </div>
+            <div class="p-4 space-y-4 max-h-96 overflow-y-auto">
+                @foreach($recentActivities as $activity)
+                <div class="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div class="w-10 h-10 rounded-full {{ $activity['color'] }} flex items-center justify-center">
+                        <i class="fas fa-{{ $activity['icon'] }} text-white"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-medium text-gray-900">{{ $activity['title'] }}</p>
+                        <p class="text-sm text-gray-600 mt-1">{{ $activity['description'] }}</p>
+                        <p class="text-xs text-gray-400 mt-2">{{ $activity['time'] }}</p>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-gradient-to-r from-gray-800 to-gray-900 rounded-xl p-4 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-300 text-sm">Total Assets</p>
+                    <p class="text-2xl font-bold mt-1">{{ number_format($platformStats['total_assets'] ?? 0) }}</p>
+                </div>
+                <i class="fas fa-server text-gray-400 text-xl"></i>
+            </div>
+        </div>
+        
+        <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-4 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-blue-100 text-sm">Work Orders</p>
+                    <p class="text-2xl font-bold mt-1">{{ number_format($platformStats['total_work_orders'] ?? 0) }}</p>
+                </div>
+                <i class="fas fa-clipboard-list text-blue-200 text-xl"></i>
+            </div>
+        </div>
+        
+        <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl p-4 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-yellow-100 text-sm">Pending Invoices</p>
+                    <p class="text-2xl font-bold mt-1">{{ number_format($platformStats['pending_invoices'] ?? 0) }}</p>
+                </div>
+                <i class="fas fa-file-invoice text-yellow-200 text-xl"></i>
+            </div>
+        </div>
+        
+        <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-4 text-white">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-green-100 text-sm">Active Sessions</p>
+                    <p class="text-2xl font-bold mt-1">{{ number_format($platformStats['active_sessions'] ?? 0) }}</p>
+                </div>
+                <i class="fas fa-signal text-green-200 text-xl"></i>
+            </div>
         </div>
     </div>
 </div>
 
 @push('scripts')
 <script>
-    // Button Functions
-    function exportReport() {
-        alert('Exporting report... (Will be implemented)');
-    }
-
-    function addCompany() {
-        alert('Opening Add Company modal...');
-    }
-
-    function viewAllCompanies() {
-        alert('Redirecting to Companies list...');
-    }
-
-    function viewCompany(id) {
-        alert('Viewing company ID: ' + id);
-    }
-
-    // Chart.js - Revenue Line Chart
-    const revenueCtx = document.getElementById('revenueChart').getContext('2d');
-    new Chart(revenueCtx, {
-        type: 'line',
-        data: {
-            labels: {!! json_encode($monthLabels ?? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']) !!},
-            datasets: [{
-                label: 'Revenue',
-                data: {!! json_encode($revenueData ?? [30000, 35000, 32000, 40000, 42000, 45600]) !!},
-                borderColor: 'rgb(99, 102, 241)',
-                backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                tension: 0.4,
-                fill: true,
-                pointRadius: 5,
-                pointHoverRadius: 7,
-                pointBackgroundColor: 'rgb(99, 102, 241)',
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2,
-            }]
+function dashboard() {
+    return {
+        init() {
+            this.initRevenueChart();
+            this.initCompaniesChart();
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: 'rgba(0,0,0,0.8)',
-                    padding: 12,
-                    titleFont: { size: 14, weight: 'bold' },
-                    bodyFont: { size: 13 },
-                    callbacks: {
-                        label: ctx => 'Revenue: $' + ctx.parsed.y.toLocaleString()
+        
+        initRevenueChart() {
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: @json($monthLabels),
+                    datasets: [{
+                        label: 'Revenue ($)',
+                        data: @json($revenueData),
+                        borderColor: '#4f46e5',
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: '#4f46e5',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: (context) => `$${context.parsed.y.toLocaleString()}`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            ticks: {
+                                callback: (value) => '$' + (value / 1000) + 'k'
+                            }
+                        },
+                        x: { 
+                            grid: { display: false }
+                        }
                     }
                 }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: { color: 'rgba(0,0,0,0.05)' },
-                    ticks: {
-                        callback: v => '$' + (v / 1000) + 'k'
-                    }
-                },
-                x: { grid: { display: false } }
-            }
-        }
-    });
-
-    // Chart.js - Companies Bar Chart
-    const companiesCtx = document.getElementById('companiesChart').getContext('2d');
-    new Chart(companiesCtx, {
-        type: 'bar',
-        data: {
-            labels: {!! json_encode($monthLabels ?? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']) !!},
-            datasets: [{
-                label: 'New Companies',
-                data: {!! json_encode($companiesGrowth ?? [12, 19, 15, 25, 22, 30]) !!},
-                backgroundColor: 'rgba(99, 102, 241, 0.8)',
-                hoverBackgroundColor: 'rgba(99, 102, 241, 1)',
-                borderRadius: 8,
-                borderSkipped: false,
-            }]
+            });
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: 'rgba(0,0,0,0.8)',
-                    padding: 12,
-                    titleFont: { size: 14, weight: 'bold' },
-                    bodyFont: { size: 13 }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: { color: 'rgba(0,0,0,0.05)' },
-                    ticks: { stepSize: 5 }
+        
+        initCompaniesChart() {
+            const ctx = document.getElementById('companiesChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: @json($monthLabels),
+                    datasets: [{
+                        label: 'New Companies',
+                        data: @json($companiesData),
+                        backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                        borderColor: 'rgb(16, 185, 129)',
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        borderSkipped: false,
+                    }]
                 },
-                x: { grid: { display: false } }
-            }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => `${context.parsed.y} companies`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(0,0,0,0.05)' },
+                            ticks: { stepSize: 5 }
+                        },
+                        x: { 
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        },
+        
+        exportReport(type) {
+            fetch(`/admin/export-report?type=${type}`, {
+                method: 'GET',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Create download link
+                    const blob = new Blob([JSON.stringify(data.data)], { type: 'application/json' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${type}_report_${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    
+                    this.showNotification('Report exported successfully!', 'success');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                this.showNotification('Failed to export report', 'error');
+            });
+        },
+        
+        showNotification(message, type = 'success') {
+            // Implement notification system
+            alert(message);
         }
-    });
+    };
+}
 </script>
 @endpush
 @endsection
