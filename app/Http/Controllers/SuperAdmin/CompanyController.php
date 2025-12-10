@@ -6,19 +6,21 @@ use App\Http\Controllers\Controller;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Models\Subscription;
+use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Carbon\Carbon;
 
 class CompanyController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Tenant::with(['subscription', 'users'])
-            ->withCount('users');
+        $query = Tenant::query();
         
-        // Search filter
+        // Search
         if ($request->has('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -29,24 +31,22 @@ class CompanyController extends Controller
         }
         
         // Status filter
-        if ($request->has('status') && in_array($request->status, ['active', 'suspended', 'trialing'])) {
+        if ($request->has('status') && $request->status != 'all') {
             $query->where('status', $request->status);
         }
         
-        // Plan filter
-        if ($request->has('plan') && $request->plan) {
-            $query->whereHas('subscription', function($q) use ($request) {
-                $q->where('plan_name', $request->plan);
-            });
-        }
+        // Sort
+        $sort = $request->get('sort', 'created_at');
+        $order = $request->get('order', 'desc');
+        $query->orderBy($sort, $order);
         
-        $companies = $query->latest()->paginate(15);
+        $companies = $query->withCount('users')->paginate(20);
         
         $stats = [
             'total' => Tenant::count(),
             'active' => Tenant::where('status', 'active')->count(),
-            'trialing' => Tenant::where('status', 'trialing')->count(),
             'suspended' => Tenant::where('status', 'suspended')->count(),
+            'trialing' => Tenant::where('status', 'trialing')->count(),
         ];
         
         return view('super-admin.companies.index', compact('companies', 'stats'));
@@ -59,23 +59,23 @@ class CompanyController extends Controller
     
     public function store(Request $request)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:tenants,email',
-            'domain' => 'required|string|unique:tenants,domain|alpha_dash',
             'phone' => 'nullable|string',
-            'address' => 'nullable|string',
-            'city' => 'nullable|string',
-            'state' => 'nullable|string',
-            'country' => 'nullable|string',
-            'postal_code' => 'nullable|string',
+            'domain' => 'required|string|unique:tenants,domain|regex:/^[a-zA-Z0-9]+$/',
+            'plan' => 'required|in:starter,growth,premium,enterprise',
+            'status' => 'required|in:active,suspended,trialing',
             'admin_name' => 'required|string',
             'admin_email' => 'required|email|unique:users,email',
             'admin_password' => 'required|string|min:8',
-            'plan' => 'required|in:starter,growth,premium,enterprise',
-            'status' => 'required|in:active,suspended,trialing',
-            'trial_ends_at' => 'nullable|date',
         ]);
+        
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
         
         DB::beginTransaction();
         
@@ -84,16 +84,10 @@ class CompanyController extends Controller
             $tenant = Tenant::create([
                 'name' => $request->name,
                 'email' => $request->email,
-                'domain' => $request->domain,
                 'phone' => $request->phone,
-                'address' => $request->address,
-                'city' => $request->city,
-                'state' => $request->state,
-                'country' => $request->country,
-                'postal_code' => $request->postal_code,
+                'domain' => $request->domain,
                 'status' => $request->status,
                 'settings' => [
-                    'theme' => 'light',
                     'timezone' => 'UTC',
                     'currency' => 'USD',
                     'language' => 'en',
@@ -108,18 +102,18 @@ class CompanyController extends Controller
                 'enterprise' => 1200,
             ];
             
-            $subscription = Subscription::create([
+            Subscription::create([
                 'tenant_id' => $tenant->id,
                 'plan_name' => $request->plan,
                 'price' => $planPrices[$request->plan],
-                'status' => 'active',
+                'status' => $request->status == 'trialing' ? 'trialing' : 'active',
                 'billing_cycle' => 'monthly',
-                'trial_ends_at' => $request->trial_ends_at,
-                'ends_at' => $request->trial_ends_at ? now()->addDays(14) : null,
+                'trial_ends_at' => $request->status == 'trialing' ? now()->addDays(14) : null,
+                'ends_at' => $request->status == 'trialing' ? now()->addDays(14) : now()->addYear(),
             ]);
             
             // Create admin user
-            $admin = User::create([
+            User::create([
                 'tenant_id' => $tenant->id,
                 'name' => $request->admin_name,
                 'email' => $request->admin_email,
@@ -133,10 +127,12 @@ class CompanyController extends Controller
             
             return redirect()->route('admin.companies.show', $tenant->id)
                 ->with('success', 'Company created successfully!');
-            
+                
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Failed to create company: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Failed to create company: ' . $e->getMessage())
+                ->withInput();
         }
     }
     
@@ -146,60 +142,96 @@ class CompanyController extends Controller
             $q->latest()->take(10);
         }]);
         
-        $stats = [
-            'total_users' => $company->users()->count(),
-            'active_users' => $company->users()->where('status', 'active')->count(),
-            'total_assets' => DB::connection('tenant')->table('assets')->count(),
-            'active_work_orders' => DB::connection('tenant')->table('work_orders')
-                ->where('status', '!=', 'completed')->count(),
-        ];
+        // Get tenant database stats
+        $tenantStats = [];
+        try {
+            DB::connection('tenant')->getPdo();
+            $tenantStats = [
+                'users' => DB::connection('tenant')->table('users')->count(),
+                'items' => DB::connection('tenant')->table('items')->count(),
+                'orders' => DB::connection('tenant')->table('orders')->count(),
+                'warehouses' => DB::connection('tenant')->table('warehouses')->count(),
+            ];
+        } catch (\Exception $e) {
+            $tenantStats = [
+                'users' => 0,
+                'items' => 0,
+                'orders' => 0,
+                'warehouses' => 0,
+            ];
+        }
         
-        return view('super-admin.companies.show', compact('company', 'stats'));
+        return view('super-admin.companies.show', compact('company', 'tenantStats'));
     }
     
     public function edit(Tenant $company)
     {
+        $company->load('subscription');
         return view('super-admin.companies.edit', compact('company'));
     }
     
     public function update(Request $request, Tenant $company)
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => ['required', 'email', Rule::unique('tenants')->ignore($company->id)],
             'phone' => 'nullable|string',
-            'address' => 'nullable|string',
-            'city' => 'nullable|string',
-            'state' => 'nullable|string',
-            'country' => 'nullable|string',
-            'postal_code' => 'nullable|string',
+            'domain' => ['required', 'string', 'regex:/^[a-zA-Z0-9]+$/', Rule::unique('tenants')->ignore($company->id)],
             'status' => 'required|in:active,suspended,trialing',
-            'settings.timezone' => 'nullable|string',
-            'settings.currency' => 'nullable|string',
-            'settings.language' => 'nullable|string',
+            'plan' => 'required|in:starter,growth,premium,enterprise',
         ]);
         
-        $company->update([
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'address' => $request->address,
-            'city' => $request->city,
-            'state' => $request->state,
-            'country' => $request->country,
-            'postal_code' => $request->postal_code,
-            'status' => $request->status,
-            'settings' => array_merge((array) $company->settings, $request->settings ?? []),
-        ]);
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
         
-        return redirect()->route('admin.companies.show', $company->id)
-            ->with('success', 'Company updated successfully!');
+        DB::beginTransaction();
+        
+        try {
+            // Update tenant
+            $company->update([
+                'name' => $request->name,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'domain' => $request->domain,
+                'status' => $request->status,
+            ]);
+            
+            // Update subscription
+            $planPrices = [
+                'starter' => 230,
+                'growth' => 450,
+                'premium' => 750,
+                'enterprise' => 1200,
+            ];
+            
+            if ($company->subscription) {
+                $company->subscription->update([
+                    'plan_name' => $request->plan,
+                    'price' => $planPrices[$request->plan],
+                    'status' => $request->status == 'trialing' ? 'trialing' : 'active',
+                ]);
+            }
+            
+            DB::commit();
+            
+            return redirect()->route('admin.companies.show', $company->id)
+                ->with('success', 'Company updated successfully!');
+                
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                ->with('error', 'Failed to update company: ' . $e->getMessage())
+                ->withInput();
+        }
     }
     
     public function destroy(Tenant $company)
     {
         // Check if company has active subscription
-        if ($company->subscription && $company->subscription->status === 'active') {
+        if ($company->subscription && $company->subscription->status == 'active') {
             return back()->with('error', 'Cannot delete company with active subscription');
         }
         
@@ -213,12 +245,20 @@ class CompanyController extends Controller
     {
         $company->update(['status' => 'suspended']);
         
+        if ($company->subscription) {
+            $company->subscription->update(['status' => 'suspended']);
+        }
+        
         return back()->with('success', 'Company suspended successfully!');
     }
     
     public function activate(Tenant $company)
     {
         $company->update(['status' => 'active']);
+        
+        if ($company->subscription) {
+            $company->subscription->update(['status' => 'active']);
+        }
         
         return back()->with('success', 'Company activated successfully!');
     }
@@ -232,26 +272,19 @@ class CompanyController extends Controller
             ]);
         }
         
-        return back()->with('success', 'Trial reset successfully!');
+        return back()->with('success', 'Trial reset to 14 days!');
     }
     
     public function export()
     {
         $companies = Tenant::with(['subscription', 'users'])->get();
         
-        $csv = fopen('php://temp', 'w');
+        $csv = "ID,Name,Email,Domain,Plan,Status,Users,Created At,Monthly Revenue\n";
         
-        // Add CSV headers
-        fputcsv($csv, [
-            'ID', 'Name', 'Email', 'Domain', 'Plan', 'Status', 
-            'Users', 'Created At', 'Monthly Revenue'
-        ]);
-        
-        // Add data rows
         foreach ($companies as $company) {
-            fputcsv($csv, [
+            $csv .= implode(',', [
                 $company->id,
-                $company->name,
+                '"' . $company->name . '"',
                 $company->email,
                 $company->domain,
                 $company->subscription->plan_name ?? 'N/A',
@@ -259,14 +292,10 @@ class CompanyController extends Controller
                 $company->users->count(),
                 $company->created_at->format('Y-m-d'),
                 $company->subscription->price ?? 0,
-            ]);
+            ]) . "\n";
         }
         
-        rewind($csv);
-        $csvContent = stream_get_contents($csv);
-        fclose($csv);
-        
-        return response($csvContent)
+        return response($csv)
             ->header('Content-Type', 'text/csv')
             ->header('Content-Disposition', 'attachment; filename="companies_' . date('Y-m-d') . '.csv"');
     }
