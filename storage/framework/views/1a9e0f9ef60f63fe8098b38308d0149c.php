@@ -1,8 +1,8 @@
-@extends('layouts.super-admin')
 
-@section('title', 'Analytics Dashboard - SmartIMS')
 
-@section('content')
+<?php $__env->startSection('title', 'Analytics Dashboard - SmartIMS'); ?>
+
+<?php $__env->startSection('content'); ?>
 <div x-data="analytics()" class="space-y-6">
     <!-- Header -->
     <div class="bg-white rounded-2xl shadow-lg p-6">
@@ -14,12 +14,12 @@
             <div class="mt-4 md:mt-0">
                 <form method="GET" class="flex items-center space-x-3">
                     <div>
-                        <input type="date" name="start_date" value="{{ $startDate }}"
+                        <input type="date" name="start_date" value="<?php echo e($startDate); ?>"
                                class="rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                     </div>
                     <span class="text-gray-500">to</span>
                     <div>
-                        <input type="date" name="end_date" value="{{ $endDate }}"
+                        <input type="date" name="end_date" value="<?php echo e($endDate); ?>"
                                class="rounded-lg border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
                     </div>
                     <button type="submit" 
@@ -37,7 +37,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-indigo-100 text-sm">Monthly Revenue (MRR)</p>
-                    <p class="text-2xl font-bold mt-1">${{ number_format($metrics['mrr']) }}</p>
+                    <p class="text-2xl font-bold mt-1">$<?php echo e(number_format($metrics['mrr'])); ?></p>
                 </div>
                 <i class="fas fa-dollar-sign text-2xl opacity-50"></i>
             </div>
@@ -46,7 +46,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-green-100 text-sm">Annual Revenue (ARR)</p>
-                    <p class="text-2xl font-bold mt-1">${{ number_format($metrics['arr']) }}</p>
+                    <p class="text-2xl font-bold mt-1">$<?php echo e(number_format($metrics['arr'])); ?></p>
                 </div>
                 <i class="fas fa-chart-line text-2xl opacity-50"></i>
             </div>
@@ -55,7 +55,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-yellow-100 text-sm">Churn Rate</p>
-                    <p class="text-2xl font-bold mt-1">{{ number_format($metrics['churn_rate'], 2) }}%</p>
+                    <p class="text-2xl font-bold mt-1"><?php echo e(number_format($metrics['churn_rate'], 2)); ?>%</p>
                 </div>
                 <i class="fas fa-chart-pie text-2xl opacity-50"></i>
             </div>
@@ -64,7 +64,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-purple-100 text-sm">Avg Revenue Per User</p>
-                    <p class="text-2xl font-bold mt-1">${{ number_format($metrics['arpu'], 2) }}</p>
+                    <p class="text-2xl font-bold mt-1">$<?php echo e(number_format($metrics['arpu'], 2)); ?></p>
                 </div>
                 <i class="fas fa-users text-2xl opacity-50"></i>
             </div>
@@ -77,7 +77,7 @@
             <div class="flex items-center justify-between mb-6">
                 <div>
                     <h3 class="text-lg font-semibold text-gray-900">Revenue Trend</h3>
-                    <p class="text-gray-600 text-sm mt-1">Daily revenue from {{ $startDate }} to {{ $endDate }}</p>
+                    <p class="text-gray-600 text-sm mt-1">Daily revenue from <?php echo e($startDate); ?> to <?php echo e($endDate); ?></p>
                 </div>
                 <button @click="exportData('revenue')" 
                         class="text-sm text-indigo-600 hover:text-indigo-900">
@@ -112,31 +112,33 @@
         <div class="bg-white rounded-2xl shadow-lg p-6">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-lg font-semibold text-gray-900">Revenue by Plan</h3>
-                <span class="text-sm text-gray-500">{{ count($revenueByPlan) }} plans</span>
+                <span class="text-sm text-gray-500"><?php echo e(count($revenueByPlan)); ?> plans</span>
             </div>
            <div class="space-y-4">
-    @foreach($revenueByPlan as $plan)
+    <?php $__currentLoopData = $revenueByPlan; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $plan): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
     <div class="flex items-center justify-between">
         <div class="flex items-center">
             <div class="w-3 h-3 rounded-full mr-3
-                {{ isset($plan['plan']) && $plan['plan'] === 'enterprise' ? 'bg-purple-500' : 
+                <?php echo e(isset($plan['plan']) && $plan['plan'] === 'enterprise' ? 'bg-purple-500' : 
                    (isset($plan['plan']) && $plan['plan'] === 'premium' ? 'bg-blue-500' : 
                    (isset($plan['plan']) && $plan['plan'] === 'growth' ? 'bg-green-500' : 
-                   'bg-gray-500')) }}"></div>
+                   'bg-gray-500'))); ?>"></div>
             <span class="text-sm font-medium text-gray-900">
-                {{ isset($plan['plan']) ? ucfirst($plan['plan']) : 'Unknown Plan' }}
+                <?php echo e(isset($plan['plan']) ? ucfirst($plan['plan']) : 'Unknown Plan'); ?>
+
             </span>
         </div>
         <div class="text-right">
             <div class="text-sm font-medium text-gray-900">
-                ${{ isset($plan['revenue']) ? number_format($plan['revenue']) : '0' }}
+                $<?php echo e(isset($plan['revenue']) ? number_format($plan['revenue']) : '0'); ?>
+
             </div>
             <div class="text-xs text-gray-500">
-                {{ isset($plan['count']) ? $plan['count'] : '0' }} companies
+                <?php echo e(isset($plan['count']) ? $plan['count'] : '0'); ?> companies
             </div>
         </div>
     </div>
-    @endforeach
+    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 </div>
         </div>
 
@@ -167,22 +169,23 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200">
-                        @foreach($revenueData->take(7) as $revenue)
+                        <?php $__currentLoopData = $revenueData->take(7); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $revenue): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <tr>
-                            <td class="px-4 py-3 text-sm text-gray-900">{{ $revenue->date }}</td>
-                            <td class="px-4 py-3 text-sm text-gray-900">${{ number_format($revenue->total, 2) }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-900"><?php echo e($revenue->date); ?></td>
+                            <td class="px-4 py-3 text-sm text-gray-900">$<?php echo e(number_format($revenue->total, 2)); ?></td>
                             <td class="px-4 py-3">
-                                <span class="inline-flex items-center text-sm {{ $revenue->total > 0 ? 'text-green-600' : 'text-red-600' }}">
-                                    @if($revenue->total > 0)
+                                <span class="inline-flex items-center text-sm <?php echo e($revenue->total > 0 ? 'text-green-600' : 'text-red-600'); ?>">
+                                    <?php if($revenue->total > 0): ?>
                                     <i class="fas fa-arrow-up mr-1"></i> 
-                                    @else
+                                    <?php else: ?>
                                     <i class="fas fa-arrow-down mr-1"></i>
-                                    @endif
-                                    {{ $revenue->total > 0 ? 'Positive' : 'Negative' }}
+                                    <?php endif; ?>
+                                    <?php echo e($revenue->total > 0 ? 'Positive' : 'Negative'); ?>
+
                                 </span>
                             </td>
                         </tr>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </tbody>
                 </table>
             </div>
@@ -192,36 +195,36 @@
         <div class="bg-white rounded-2xl shadow-lg p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">User Distribution</h3>
             <div class="space-y-4">
-                @foreach($userDistribution as $role => $count)
+                <?php $__currentLoopData = $userDistribution; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $role => $count): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <div class="flex items-center justify-between">
                     <div class="flex items-center">
                         <div class="w-8 h-8 rounded-full 
-                            {{ $role === 'admins' ? 'bg-purple-100 text-purple-600' : 
+                            <?php echo e($role === 'admins' ? 'bg-purple-100 text-purple-600' : 
                                ($role === 'managers' ? 'bg-green-100 text-green-600' : 
-                               'bg-blue-100 text-blue-600') }} flex items-center justify-center mr-3">
+                               'bg-blue-100 text-blue-600')); ?> flex items-center justify-center mr-3">
                             <i class="fas 
-                                {{ $role === 'admins' ? 'fa-shield-alt' : 
+                                <?php echo e($role === 'admins' ? 'fa-shield-alt' : 
                                    ($role === 'managers' ? 'fa-user-tie' : 
-                                   'fa-user') }}"></i>
+                                   'fa-user')); ?>"></i>
                         </div>
                         <div>
-                            <p class="text-sm font-medium text-gray-900">{{ ucfirst($role) }}</p>
-                            <p class="text-xs text-gray-500">{{ $count }} users</p>
+                            <p class="text-sm font-medium text-gray-900"><?php echo e(ucfirst($role)); ?></p>
+                            <p class="text-xs text-gray-500"><?php echo e($count); ?> users</p>
                         </div>
                     </div>
                     <div class="text-right">
                         <div class="text-sm font-medium text-gray-900">
-                            {{ $totalUsers = array_sum($userDistribution) > 0 ? round(($count / array_sum($userDistribution)) * 100) : 0 }}%
+                            <?php echo e($totalUsers = array_sum($userDistribution) > 0 ? round(($count / array_sum($userDistribution)) * 100) : 0); ?>%
                         </div>
                     </div>
                 </div>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
         </div>
     </div>
 </div>
 
-@push('scripts')
+<?php $__env->startPush('scripts'); ?>
 <script>
 function analytics() {
     return {
@@ -233,8 +236,8 @@ function analytics() {
         
         initRevenueChart() {
             const ctx = document.getElementById('revenueChart').getContext('2d');
-            const dates = @json($revenueData->pluck('date'));
-            const revenue = @json($revenueData->pluck('total'));
+            const dates = <?php echo json_encode($revenueData->pluck('date'), 15, 512) ?>;
+            const revenue = <?php echo json_encode($revenueData->pluck('total'), 15, 512) ?>;
             
             new Chart(ctx, {
                 type: 'line',
@@ -261,8 +264,8 @@ function analytics() {
         
         initUserGrowthChart() {
             const ctx = document.getElementById('userGrowthChart').getContext('2d');
-            const dates = @json($userGrowth->pluck('date'));
-            const counts = @json($userGrowth->pluck('count'));
+            const dates = <?php echo json_encode($userGrowth->pluck('date'), 15, 512) ?>;
+            const counts = <?php echo json_encode($userGrowth->pluck('count'), 15, 512) ?>;
             
             new Chart(ctx, {
                 type: 'bar',
@@ -287,7 +290,7 @@ function analytics() {
         
         initCompanyDistributionChart() {
             const ctx = document.getElementById('companyDistributionChart').getContext('2d');
-            const data = @json($companyDistribution);
+            const data = <?php echo json_encode($companyDistribution, 15, 512) ?>;
             
             new Chart(ctx, {
                 type: 'doughnut',
@@ -316,10 +319,11 @@ function analytics() {
         },
         
         exportData(type) {
-            window.location.href = `{{ route('admin.analytics.export') }}?type=${type}&start_date={{ $startDate }}&end_date={{ $endDate }}`;
+            window.location.href = `<?php echo e(route('admin.analytics.export')); ?>?type=${type}&start_date=<?php echo e($startDate); ?>&end_date=<?php echo e($endDate); ?>`;
         }
     }
 }
 </script>
-@endpush
-@endsection
+<?php $__env->stopPush(); ?>
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.super-admin', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\Users\HP\Documents\GitHub\SMARTIMS\resources\views/super-admin/analytics/index.blade.php ENDPATH**/ ?>

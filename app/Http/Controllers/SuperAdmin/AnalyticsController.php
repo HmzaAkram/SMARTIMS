@@ -97,15 +97,14 @@ class AnalyticsController extends Controller
             ->get();
     }
     
-    private function getUserDistribution()
-    {
-        return [
-            'admins' => User::where('role', 'admin')->count(),
-            'managers' => User::where('role', 'manager')->count(),
-            'users' => User::where('role', 'user')->count(),
-        ];
-    }
-    
+private function getUserDistribution()
+{
+    return [
+        'admins' => User::role('super-admin')->count(), // Spatie role naam se
+        'managers' => User::role('company-admin')->count(), // Spatie role naam se
+        'users' => User::role('staff')->count(), // Spatie role naam se
+    ];
+}
     private function getCompanyGrowth($startDate, $endDate)
     {
         return Tenant::select(

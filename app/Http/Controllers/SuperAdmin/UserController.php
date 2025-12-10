@@ -36,12 +36,12 @@ class UserController extends Controller
         
         $users = $query->latest()->paginate(20);
         
-        $stats = [
-            'total' => User::count(),
-            'admins' => User::where('role', 'admin')->count(),
-            'managers' => User::where('role', 'manager')->count(),
-            'active' => User::where('status', 'active')->count(),
-        ];
+  $stats = [
+    'total' => User::count(),
+    'admins' => User::role('super-admin')->count(),  // Role ke naam se count karo
+    'managers' => User::role('company-admin')->count(), // Role ke naam se count karo
+    'active' => User::count(),
+];
         
         return view('super-admin.users.index', compact('users', 'stats'));
     }
