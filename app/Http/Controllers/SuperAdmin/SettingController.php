@@ -3,31 +3,60 @@
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 
 class SettingController extends Controller
 {
     public function index()
     {
-        $settings = [
+        // Check if settings table exists
+        try {
+            // Test database connection and table
+            $tableExists = DB::select("SHOW TABLES LIKE 'settings'");
+            
+            if (empty($tableExists)) {
+                // Table doesn't exist, use defaults
+                $settings = $this->getDefaultSettings();
+            } else {
+                // Table exists, fetch from database
+                $settings = [
+                    'general' => $this->getGeneralSettings(),
+                    'mail' => $this->getMailSettings(),
+                    'billing' => $this->getBillingSettings(),
+                    'security' => $this->getSecuritySettings(),
+                ];
+            }
+        } catch (\Exception $e) {
+            // On error, use defaults
+            $settings = $this->getDefaultSettings();
+        }
+        
+        return view('super-admin.settings.index', compact('settings'));
+    }
+    
+    private function getDefaultSettings()
+    {
+        return [
             'general' => [
                 'app_name' => config('app.name', 'SmartIMS'),
-                'app_url' => config('app.url'),
-                'timezone' => config('app.timezone'),
-                'currency' => config('app.currency', 'USD'),
-                'date_format' => config('app.date_format', 'Y-m-d'),
-                'time_format' => config('app.time_format', 'H:i:s'),
+                'app_url' => config('app.url', 'http://localhost'),
+                'timezone' => config('app.timezone', 'UTC'),
+                'currency' => 'USD',
+                'date_format' => 'Y-m-d',
+                'time_format' => 'H:i:s',
             ],
             'mail' => [
-                'mail_host' => config('mail.mailers.smtp.host'),
-                'mail_port' => config('mail.mailers.smtp.port'),
-                'mail_username' => config('mail.mailers.smtp.username'),
-                'mail_password' => config('mail.mailers.smtp.password') ? '********' : '',
-                'mail_encryption' => config('mail.mailers.smtp.encryption'),
-                'mail_from_address' => config('mail.from.address'),
-                'mail_from_name' => config('mail.from.name'),
+                'mail_host' => config('mail.mailers.smtp.host', 'smtp.mailgun.org'),
+                'mail_port' => config('mail.mailers.smtp.port', 587),
+                'mail_username' => config('mail.mailers.smtp.username', ''),
+                'mail_password' => '',
+                'mail_encryption' => config('mail.mailers.smtp.encryption', 'tls'),
+                'mail_from_address' => config('mail.from.address', 'hello@example.com'),
+                'mail_from_name' => config('mail.from.name', 'SmartIMS'),
             ],
             'billing' => [
                 'currency' => 'USD',
@@ -46,8 +75,84 @@ class SettingController extends Controller
                 'session_timeout' => 60,
             ],
         ];
+    }
+    
+    private function getGeneralSettings()
+    {
+        $defaults = [
+            'app_name' => config('app.name', 'SmartIMS'),
+            'app_url' => config('app.url', 'http://localhost'),
+            'timezone' => config('app.timezone', 'UTC'),
+            'currency' => 'USD',
+            'date_format' => 'Y-m-d',
+            'time_format' => 'H:i:s',
+        ];
         
-        return view('super-admin.settings.index', compact('settings'));
+        $dbSettings = Setting::getGroup('general');
+        return array_merge($defaults, $dbSettings);
+    }
+    
+    private function getMailSettings()
+    {
+        $defaults = [
+            'mail_host' => config('mail.mailers.smtp.host', 'smtp.mailgun.org'),
+            'mail_port' => config('mail.mailers.smtp.port', 587),
+            'mail_username' => config('mail.mailers.smtp.username', ''),
+            'mail_password' => '',
+            'mail_encryption' => config('mail.mailers.smtp.encryption', 'tls'),
+            'mail_from_address' => config('mail.from.address', 'hello@example.com'),
+            'mail_from_name' => config('mail.from.name', 'SmartIMS'),
+        ];
+        
+        $dbSettings = Setting::getGroup('mail');
+        
+        // Don't show actual password
+        if (isset($dbSettings['mail_password']) && !empty($dbSettings['mail_password']) && $dbSettings['mail_password'] !== '********') {
+            $dbSettings['mail_password'] = '********';
+        }
+        
+        return array_merge($defaults, $dbSettings);
+    }
+    
+    private function getBillingSettings()
+    {
+        $defaults = [
+            'currency' => 'USD',
+            'tax_rate' => 0,
+            'invoice_prefix' => 'INV',
+            'due_days' => 30,
+            'late_fee' => 0,
+        ];
+        
+        $dbSettings = Setting::getGroup('billing');
+        return array_merge($defaults, $dbSettings);
+    }
+    
+    private function getSecuritySettings()
+    {
+        $defaults = [
+            'password_min_length' => 8,
+            'password_require_numbers' => true,
+            'password_require_symbols' => true,
+            'password_require_mixed_case' => true,
+            'login_attempts' => 5,
+            'lockout_time' => 15,
+            'session_timeout' => 60,
+        ];
+        
+        $dbSettings = Setting::getGroup('security');
+        
+        // Convert string values to boolean for checkboxes
+        $convertedSettings = [];
+        foreach ($dbSettings as $key => $value) {
+            if (in_array($key, ['password_require_numbers', 'password_require_symbols', 'password_require_mixed_case'])) {
+                $convertedSettings[$key] = $value === '1' || $value === true || $value === 'true';
+            } else {
+                $convertedSettings[$key] = $value;
+            }
+        }
+        
+        return array_merge($defaults, $convertedSettings);
     }
     
     public function update(Request $request)
@@ -89,20 +194,16 @@ class SettingController extends Controller
                 ->withInput();
         }
         
-        $this->updateEnvFile([
-            'APP_NAME' => $request->app_name,
-            'APP_URL' => $request->app_url,
-            'APP_TIMEZONE' => $request->timezone,
-        ]);
-        
-        // Update config file for custom settings
-        $this->updateConfigFile('app', [
-            'currency' => $request->currency,
-            'date_format' => $request->date_format,
-            'time_format' => $request->time_format,
-        ]);
-        
-        return back()->with('success', 'General settings updated successfully!');
+        // Save to database
+        try {
+            foreach ($request->except(['_token', 'section']) as $key => $value) {
+                Setting::setValue($key, $value, 'general');
+            }
+            
+            return back()->with('success', 'General settings updated successfully!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to save settings: ' . $e->getMessage());
+        }
     }
     
     private function updateMailSettings(Request $request)
@@ -123,25 +224,28 @@ class SettingController extends Controller
                 ->withInput();
         }
         
-        $envUpdates = [
-            'MAIL_HOST' => $request->mail_host,
-            'MAIL_PORT' => $request->mail_port,
-            'MAIL_USERNAME' => $request->mail_username,
-            'MAIL_FROM_ADDRESS' => $request->mail_from_address,
-            'MAIL_FROM_NAME' => $request->mail_from_name,
-        ];
+        // Get current password if not changed
+        $currentPassword = Setting::getValue('mail_password');
+        $password = $request->mail_password;
         
-        if ($request->filled('mail_password')) {
-            $envUpdates['MAIL_PASSWORD'] = $request->mail_password;
+        // If password field is empty or contains masked value, keep the old one
+        if (empty($password) || $password === '********') {
+            $password = $currentPassword;
         }
         
-        if ($request->filled('mail_encryption')) {
-            $envUpdates['MAIL_ENCRYPTION'] = $request->mail_encryption;
+        // Save to database
+        try {
+            $data = $request->except(['_token', 'section', 'mail_password']);
+            $data['mail_password'] = $password;
+            
+            foreach ($data as $key => $value) {
+                Setting::setValue($key, $value, 'mail');
+            }
+            
+            return back()->with('success', 'Mail settings updated successfully!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to save mail settings: ' . $e->getMessage());
         }
-        
-        $this->updateEnvFile($envUpdates);
-        
-        return back()->with('success', 'Mail settings updated successfully!');
     }
     
     private function updateBillingSettings(Request $request)
@@ -160,15 +264,16 @@ class SettingController extends Controller
                 ->withInput();
         }
         
-        $this->updateConfigFile('billing', [
-            'currency' => $request->currency,
-            'tax_rate' => $request->tax_rate ?? 0,
-            'invoice_prefix' => $request->invoice_prefix,
-            'due_days' => $request->due_days,
-            'late_fee' => $request->late_fee ?? 0,
-        ]);
-        
-        return back()->with('success', 'Billing settings updated successfully!');
+        // Save to database
+        try {
+            foreach ($request->except(['_token', 'section']) as $key => $value) {
+                Setting::setValue($key, $value, 'billing');
+            }
+            
+            return back()->with('success', 'Billing settings updated successfully!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to save billing settings: ' . $e->getMessage());
+        }
     }
     
     private function updateSecuritySettings(Request $request)
@@ -189,119 +294,45 @@ class SettingController extends Controller
                 ->withInput();
         }
         
-        $this->updateConfigFile('security', [
-            'password' => [
-                'min_length' => $request->password_min_length,
-                'require_numbers' => $request->boolean('password_require_numbers'),
-                'require_symbols' => $request->boolean('password_require_symbols'),
-                'require_mixed_case' => $request->boolean('password_require_mixed_case'),
-            ],
-            'login' => [
-                'attempts' => $request->login_attempts,
-                'lockout_time' => $request->lockout_time,
-            ],
-            'session' => [
-                'timeout' => $request->session_timeout,
-            ],
-        ]);
+        // Convert boolean values to string for database
+        $data = [
+            'password_min_length' => $request->password_min_length,
+            'password_require_numbers' => $request->has('password_require_numbers') ? '1' : '0',
+            'password_require_symbols' => $request->has('password_require_symbols') ? '1' : '0',
+            'password_require_mixed_case' => $request->has('password_require_mixed_case') ? '1' : '0',
+            'login_attempts' => $request->login_attempts,
+            'lockout_time' => $request->lockout_time,
+            'session_timeout' => $request->session_timeout,
+        ];
         
-        return back()->with('success', 'Security settings updated successfully!');
-    }
-    
-    private function updateEnvFile(array $updates)
-    {
-        $envPath = base_path('.env');
-        
-        if (!file_exists($envPath)) {
-            return;
-        }
-        
-        $envContent = file_get_contents($envPath);
-        
-        foreach ($updates as $key => $value) {
-            // Escape value if needed
-            $escapedValue = str_replace('"', '\"', $value);
-            
-            // Replace or add the key
-            $pattern = "/^{$key}=.*/m";
-            if (preg_match($pattern, $envContent)) {
-                $envContent = preg_replace($pattern, "{$key}=\"{$escapedValue}\"", $envContent);
-            } else {
-                $envContent .= "\n{$key}=\"{$escapedValue}\"";
+        // Save to database
+        try {
+            foreach ($data as $key => $value) {
+                Setting::setValue($key, $value, 'security');
             }
+            
+            return back()->with('success', 'Security settings updated successfully!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to save security settings: ' . $e->getMessage());
         }
-        
-        file_put_contents($envPath, $envContent);
-    }
-    
-    private function updateConfigFile($file, array $updates)
-    {
-        $configPath = config_path("{$file}.php");
-        
-        if (!file_exists($configPath)) {
-            return;
-        }
-        
-        $config = require $configPath;
-        $config = array_merge($config, $updates);
-        
-        $content = "<?php\n\nreturn " . var_export($config, true) . ";\n";
-        file_put_contents($configPath, $content);
     }
     
     public function backupDatabase()
-{
-    $filename = 'backup_' . date('Y-m-d_H-i-s') . '.sql';
-    $backupPath = storage_path('app/backups/');
-    
-    // Create backup directory if not exists
-    if (!file_exists($backupPath)) {
-        mkdir($backupPath, 0755, true);
+    {
+        return back()->with('info', 'Database backup feature requires mysqldump installation. Please contact server administrator.');
     }
     
-    $path = $backupPath . $filename;
-    
-    // Get database credentials
-    $db = config('database.connections.mysql');
-    
-    // Create backup command
-    $command = sprintf(
-        'mysqldump --user=%s --password=%s --host=%s %s > %s',
-        escapeshellarg($db['username']),
-        escapeshellarg($db['password']),
-        escapeshellarg($db['host']),
-        escapeshellarg($db['database']),
-        escapeshellarg($path)
-    );
-    
-    // Execute command
-    $returnVar = NULL;
-    $output  = NULL;
-    exec($command, $output, $returnVar);
-    
-    // Check if backup was successful
-    if ($returnVar !== 0) {
-        // Alternative simpler backup method
-        $content = "/* Database backup failed via mysqldump */\n";
-        $content .= "/* You need to setup mysqldump on your server */\n";
-        $content .= "/* Created: " . date('Y-m-d H:i:s') . " */\n";
-        file_put_contents($path, $content);
-    }
-    
-    // Check if file exists before downloading
-    if (!file_exists($path)) {
-        return back()->with('error', 'Backup file could not be created. Please check server permissions.');
-    }
-    
-    return response()->download($path)->deleteFileAfterSend(true);
-}
     public function clearCache()
     {
-        \Artisan::call('config:clear');
-        \Artisan::call('cache:clear');
-        \Artisan::call('view:clear');
-        \Artisan::call('route:clear');
-        
-        return back()->with('success', 'All cache cleared successfully!');
+        try {
+            Artisan::call('config:clear');
+            Artisan::call('cache:clear');
+            Artisan::call('view:clear');
+            Artisan::call('route:clear');
+            
+            return back()->with('success', 'All cache cleared successfully!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to clear cache: ' . $e->getMessage());
+        }
     }
 }
