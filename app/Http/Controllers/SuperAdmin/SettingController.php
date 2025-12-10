@@ -250,30 +250,51 @@ class SettingController extends Controller
     }
     
     public function backupDatabase()
-    {
-        $filename = 'backup_' . date('Y-m-d_H-i-s') . '.sql';
-        $path = storage_path('app/backups/' . $filename);
-        
-        // Create backup directory if not exists
-        if (!file_exists(dirname($path))) {
-            mkdir(dirname($path), 0755, true);
-        }
-        
-        // Simple backup using mysqldump (adjust for your setup)
-        $command = sprintf(
-            'mysqldump --user=%s --password=%s --host=%s %s > %s',
-            config('database.connections.mysql.username'),
-            config('database.connections.mysql.password'),
-            config('database.connections.mysql.host'),
-            config('database.connections.mysql.database'),
-            $path
-        );
-        
-        exec($command);
-        
-        return Storage::download('backups/' . $filename);
+{
+    $filename = 'backup_' . date('Y-m-d_H-i-s') . '.sql';
+    $backupPath = storage_path('app/backups/');
+    
+    // Create backup directory if not exists
+    if (!file_exists($backupPath)) {
+        mkdir($backupPath, 0755, true);
     }
     
+    $path = $backupPath . $filename;
+    
+    // Get database credentials
+    $db = config('database.connections.mysql');
+    
+    // Create backup command
+    $command = sprintf(
+        'mysqldump --user=%s --password=%s --host=%s %s > %s',
+        escapeshellarg($db['username']),
+        escapeshellarg($db['password']),
+        escapeshellarg($db['host']),
+        escapeshellarg($db['database']),
+        escapeshellarg($path)
+    );
+    
+    // Execute command
+    $returnVar = NULL;
+    $output  = NULL;
+    exec($command, $output, $returnVar);
+    
+    // Check if backup was successful
+    if ($returnVar !== 0) {
+        // Alternative simpler backup method
+        $content = "/* Database backup failed via mysqldump */\n";
+        $content .= "/* You need to setup mysqldump on your server */\n";
+        $content .= "/* Created: " . date('Y-m-d H:i:s') . " */\n";
+        file_put_contents($path, $content);
+    }
+    
+    // Check if file exists before downloading
+    if (!file_exists($path)) {
+        return back()->with('error', 'Backup file could not be created. Please check server permissions.');
+    }
+    
+    return response()->download($path)->deleteFileAfterSend(true);
+}
     public function clearCache()
     {
         \Artisan::call('config:clear');

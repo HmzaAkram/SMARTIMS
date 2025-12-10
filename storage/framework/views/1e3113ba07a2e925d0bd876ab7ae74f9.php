@@ -19,13 +19,11 @@
                         <i class="fas fa-sync-alt mr-2"></i> Clear Cache
                     </button>
                 </form>
-                <form action="<?php echo e(route('admin.settings.backup')); ?>" method="POST" class="inline">
-                    <?php echo csrf_field(); ?>
-                    <button type="submit" 
-                            class="inline-flex items-center px-4 py-2.5 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition">
-                        <i class="fas fa-download mr-2"></i> Backup Database
-                    </button>
-                </form>
+                <button type="button" 
+        onclick="alert('Database backup feature requires mysqldump to be installed on the server. Please setup manually or contact server administrator.')"
+        class="inline-flex items-center px-4 py-2.5 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition">
+    <i class="fas fa-download mr-2"></i> Backup Database
+</button>
             </div>
         </div>
     </div>
