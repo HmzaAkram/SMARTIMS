@@ -1,0 +1,1 @@
+<?php /**PATH C:\Users\HP\Documents\GitHub\SMARTIMS\resources\views/super-admin/settings/index.blade.php ENDPATH**/ ?>
