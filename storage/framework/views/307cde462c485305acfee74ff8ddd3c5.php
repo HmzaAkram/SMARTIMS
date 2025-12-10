@@ -29,90 +29,90 @@
     </div>
 
     <!-- Stats Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <!-- Total Items -->
-        <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-xl hover:shadow-2xl transition-all-300">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-blue-100">Total Items</p>
-                    <p class="text-3xl font-bold mt-2"><?php echo e($stats['total_items'] ?? 1245); ?></p>
-                </div>
-                <div class="bg-white/20 p-3 rounded-xl">
-                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                    </svg>
-                </div>
+    <!-- Stats Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <!-- Total Items -->
+    <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-xl hover:shadow-2xl transition-all-300">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-blue-100">Total Items</p>
+                <p class="text-3xl font-bold mt-2"><?php echo e($stats['total_items'] ?? 0); ?></p>
             </div>
-            <div class="mt-6 flex items-center text-sm">
-                <svg class="w-4 h-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0110 17z" clip-rule="evenodd"/>
+            <div class="bg-white/20 p-3 rounded-xl">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                 </svg>
-                <span>5.2% from last month</span>
             </div>
         </div>
-
-        <!-- Low Stock Items -->
-        <div class="bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-6 text-white shadow-xl hover:shadow-2xl transition-all-300">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-red-100">Low Stock Alerts</p>
-                    <p class="text-3xl font-bold mt-2"><?php echo e($stats['low_stock'] ?? 23); ?></p>
-                </div>
-                <div class="bg-white/20 p-3 rounded-xl">
-                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                    </svg>
-                </div>
-            </div>
-            <div class="mt-6">
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/20">
-                    Needs attention
-                </span>
-            </div>
-        </div>
-
-        <!-- Total Stock Value -->
-        <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white shadow-xl hover:shadow-2xl transition-all-300">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-green-100">Stock Value</p>
-                    <p class="text-3xl font-bold mt-2">$<?php echo e(number_format($stats['value'] ?? 125600)); ?></p>
-                </div>
-                <div class="bg-white/20 p-3 rounded-xl">
-                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                </div>
-            </div>
-            <div class="mt-6 flex items-center text-sm">
-                <svg class="w-4 h-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0110 17z" clip-rule="evenodd"/>
-                </svg>
-                <span>8.1% from last month</span>
-            </div>
-        </div>
-
-        <!-- Warehouses -->
-        <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white shadow-xl hover:shadow-2xl transition-all-300">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-purple-100">Active Warehouses</p>
-                    <p class="text-3xl font-bold mt-2"><?php echo e($warehouses ?? 5); ?></p>
-                </div>
-                <div class="bg-white/20 p-3 rounded-xl">
-                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/>
-                    </svg>
-                </div>
-            </div>
-            <div class="mt-6">
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/20">
-                    Active locations
-                </span>
-            </div>
+        <div class="mt-6 flex items-center text-sm">
+            <svg class="w-4 h-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0110 17z" clip-rule="evenodd"/>
+            </svg>
+            <span><?php echo e($stats['item_growth'] ?? 0); ?>% from last month</span>
         </div>
     </div>
 
+    <!-- Low Stock Items -->
+    <div class="bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-6 text-white shadow-xl hover:shadow-2xl transition-all-300">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-red-100">Low Stock Alerts</p>
+                <p class="text-3xl font-bold mt-2"><?php echo e($stats['low_stock'] ?? 0); ?></p>
+            </div>
+            <div class="bg-white/20 p-3 rounded-xl">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+            </div>
+        </div>
+        <div class="mt-6">
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/20">
+                Needs attention
+            </span>
+        </div>
+    </div>
+
+    <!-- Total Stock Value -->
+    <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white shadow-xl hover:shadow-2xl transition-all-300">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-green-100">Stock Value</p>
+                <p class="text-3xl font-bold mt-2">$<?php echo e(number_format($stats['value'] ?? 0)); ?></p>
+            </div>
+            <div class="bg-white/20 p-3 rounded-xl">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+        </div>
+        <div class="mt-6 flex items-center text-sm">
+            <svg class="w-4 h-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.77a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.158V16.25A.75.75 0 0110 17z" clip-rule="evenodd"/>
+            </svg>
+            <span><?php echo e($stats['value_growth'] ?? 0); ?>% from last month</span>
+        </div>
+    </div>
+
+    <!-- Warehouses -->
+    <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white shadow-xl hover:shadow-2xl transition-all-300">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-purple-100">Active Warehouses</p>
+                <p class="text-3xl font-bold mt-2"><?php echo e($warehouses ?? 0); ?></p>
+            </div>
+            <div class="bg-white/20 p-3 rounded-xl">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/>
+                </svg>
+            </div>
+        </div>
+        <div class="mt-6">
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/20">
+                Active locations
+            </span>
+        </div>
+    </div>
+</div>
     <!-- Charts Section -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Inventory Overview Chart -->
@@ -130,36 +130,45 @@
             </div>
         </div>
 
-        <!-- Stock Distribution -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Stock Distribution</h3>
-            <div class="h-56 mb-6">
-                <canvas id="stockPieChart"></canvas>
+       <!-- Stock Distribution -->
+<div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl">
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Stock Distribution</h3>
+    <div class="h-56 mb-6">
+        <canvas id="stockPieChart"></canvas>
+    </div>
+    <div class="space-y-3">
+        <div class="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
+            <div class="flex items-center">
+                <span class="w-3 h-3 rounded-full bg-blue-500 mr-3"></span>
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">In Stock</span>
             </div>
-            <div class="space-y-3">
-                <div class="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
-                    <div class="flex items-center">
-                        <span class="w-3 h-3 rounded-full bg-blue-500 mr-3"></span>
-                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">In Stock</span>
-                    </div>
-                    <span class="text-sm font-bold text-gray-900 dark:text-white">68%</span>
-                </div>
-                <div class="flex items-center justify-between p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl">
-                    <div class="flex items-center">
-                        <span class="w-3 h-3 rounded-full bg-yellow-500 mr-3"></span>
-                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Low Stock</span>
-                    </div>
-                    <span class="text-sm font-bold text-gray-900 dark:text-white">22%</span>
-                </div>
-                <div class="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-xl">
-                    <div class="flex items-center">
-                        <span class="w-3 h-3 rounded-full bg-red-500 mr-3"></span>
-                        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Out of Stock</span>
-                    </div>
-                    <span class="text-sm font-bold text-gray-900 dark:text-white">10%</span>
-                </div>
+            <div class="text-right">
+                <span class="text-sm font-bold text-gray-900 dark:text-white"><?php echo e($stockDistribution['in_stock'] ?? 0); ?>%</span>
+                <p class="text-xs text-gray-500 dark:text-gray-400"><?php echo e($stockDistribution['in_stock_count'] ?? 0); ?> items</p>
             </div>
         </div>
+        <div class="flex items-center justify-between p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl">
+            <div class="flex items-center">
+                <span class="w-3 h-3 rounded-full bg-yellow-500 mr-3"></span>
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Low Stock</span>
+            </div>
+            <div class="text-right">
+                <span class="text-sm font-bold text-gray-900 dark:text-white"><?php echo e($stockDistribution['low_stock'] ?? 0); ?>%</span>
+                <p class="text-xs text-gray-500 dark:text-gray-400"><?php echo e($stockDistribution['low_stock_count'] ?? 0); ?> items</p>
+            </div>
+        </div>
+        <div class="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-xl">
+            <div class="flex items-center">
+                <span class="w-3 h-3 rounded-full bg-red-500 mr-3"></span>
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Out of Stock</span>
+            </div>
+            <div class="text-right">
+                <span class="text-sm font-bold text-gray-900 dark:text-white"><?php echo e($stockDistribution['out_of_stock'] ?? 0); ?>%</span>
+                <p class="text-xs text-gray-500 dark:text-gray-400"><?php echo e($stockDistribution['out_of_stock_count'] ?? 0); ?> items</p>
+            </div>
+        </div>
+    </div>
+</div>
     </div>
 
     <!-- Recent Activities & Low Stock Items -->
@@ -273,69 +282,100 @@
     <!-- Quick Stats Row -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Top Categories -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Top Categories</h3>
-            <div class="space-y-4">
-                <?php $__currentLoopData = ['Electronics', 'Office Supplies', 'Raw Materials']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $category): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600 dark:text-gray-400"><?php echo e($category); ?></span>
-                    <div class="flex items-center space-x-2">
-                        <div class="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                            <div class="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" style="width: <?php echo e(rand(60, 90)); ?>%"></div>
-                        </div>
-                        <span class="text-sm font-medium text-gray-900 dark:text-white"><?php echo e(rand(200, 500)); ?></span>
-                    </div>
+        <!-- Top Categories -->
+<div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl">
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Top Categories</h3>
+    <div class="space-y-4">
+        <?php $__empty_1 = true; $__currentLoopData = $topCategories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $category): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+        <div class="flex items-center justify-between">
+            <span class="text-sm text-gray-600 dark:text-gray-400"><?php echo e($category->name); ?></span>
+            <div class="flex items-center space-x-2">
+                <div class="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <?php
+                        $percentage = $topCategories->sum('items_count') > 0 ? 
+                            ($category->items_count / $topCategories->sum('items_count')) * 100 : 0;
+                    ?>
+                    <div class="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" 
+                         style="width: <?php echo e($percentage); ?>%"></div>
                 </div>
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                <span class="text-sm font-medium text-gray-900 dark:text-white"><?php echo e($category->items_count); ?></span>
             </div>
         </div>
-
-        <!-- Recent Orders -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Orders</h3>
-            <div class="space-y-3">
-                <?php $__currentLoopData = range(1, 3); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $i): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-                    <div>
-                        <p class="text-sm font-medium text-gray-900 dark:text-white">Order #<?php echo e(1000 + $i); ?></p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400"><?php echo e(now()->subHours($i)->diffForHumans()); ?></p>
-                    </div>
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                        Completed
-                    </span>
-                </div>
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-            </div>
-        </div>
-
-        <!-- System Status -->
-        <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">System Status</h3>
-            <div class="space-y-4">
-                <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Storage</span>
-                    <span class="text-sm font-medium text-gray-900 dark:text-white">68%</span>
-                </div>
-                <div class="w-full bg-gray-200 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
-                    <div class="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full" style="width: 68%"></div>
-                </div>
-                
-                <div class="flex items-center justify-between mt-6">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Active Users</span>
-                    <span class="text-sm font-medium text-gray-900 dark:text-white"><?php echo e(rand(5, 20)); ?></span>
-                </div>
-                
-                <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-600 dark:text-gray-400">Uptime</span>
-                    <span class="text-sm font-medium text-gray-900 dark:text-white">99.9%</span>
-                </div>
-            </div>
-        </div>
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+        <p class="text-sm text-gray-500 dark:text-gray-400">No categories found</p>
+        <?php endif; ?>
     </div>
 </div>
 
+       <!-- Recent Orders -->
+<div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl">
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Orders</h3>
+    <div class="space-y-3">
+        <?php $__empty_1 = true; $__currentLoopData = $recentOrders; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $order): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+        <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+            <div>
+                <p class="text-sm font-medium text-gray-900 dark:text-white"><?php echo e($order->order_number ?? 'Order #' . $order->id); ?></p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                    <?php echo e($order->customer->name ?? 'Customer'); ?> • 
+                    <?php echo e($order->created_at->diffForHumans()); ?>
+
+                </p>
+            </div>
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium 
+                <?php echo e($order->status === 'delivered' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 
+                   ($order->status === 'pending' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' : 
+                   'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300')); ?>">
+                <?php echo e(ucfirst($order->status ?? 'Pending')); ?>
+
+            </span>
+        </div>
+        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+        <div class="text-center py-4">
+            <p class="text-sm text-gray-500 dark:text-gray-400">No recent orders</p>
+        </div>
+        <?php endif; ?>
+    </div>
+</div>
+
+       <!-- System Status -->
+<div class="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-xl">
+    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">System Status</h3>
+    <div class="space-y-4">
+        <div class="flex items-center justify-between">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Today's Sales</span>
+            <span class="text-sm font-medium text-gray-900 dark:text-white">$<?php echo e(number_format($todaySales)); ?></span>
+        </div>
+        
+        <div class="flex items-center justify-between">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Monthly Sales</span>
+            <span class="text-sm font-medium text-gray-900 dark:text-white">$<?php echo e(number_format($monthlySales)); ?></span>
+        </div>
+        
+        <div class="flex items-center justify-between mt-6">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Pending Orders</span>
+            <span class="text-sm font-medium text-gray-900 dark:text-white"><?php echo e($pendingOrders); ?></span>
+        </div>
+        
+        <div class="flex items-center justify-between">
+            <span class="text-sm text-gray-600 dark:text-gray-400">Completed Orders</span>
+            <span class="text-sm font-medium text-gray-900 dark:text-white"><?php echo e($completedOrders); ?></span>
+        </div>
+    </div>
+</div>
+    </div>
+</div>
 <?php $__env->startPush('scripts'); ?>
 <script>
+// Pass PHP data to JavaScript
+const chartData = {
+    labels: <?php echo json_encode($chartLabels, 15, 512) ?>,
+    stockIn: <?php echo json_encode($stockInData, 15, 512) ?>,
+    stockOut: <?php echo json_encode($stockOutData, 15, 512) ?>,
+    stockDistribution: <?php echo json_encode([
+        $stockDistribution['in_stock'] ?? 0, $stockDistribution['low_stock'] ?? 0, $stockDistribution['out_of_stock'] ?? 0
+    ]) ?>
+};
+
 // Wait for Alpine.js to be ready
 document.addEventListener('alpine:init', () => {
     // Initialize charts when they are visible
@@ -350,10 +390,10 @@ document.addEventListener('alpine:init', () => {
             new Chart(inventoryCtx.getContext('2d'), {
                 type: 'line',
                 data: {
-                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    labels: chartData.labels,
                     datasets: [{
                         label: 'Stock In',
-                        data: [150, 200, 180, 220, 250, 210, 190],
+                        data: chartData.stockIn,
                         borderColor: 'rgb(34, 197, 94)',
                         backgroundColor: 'rgba(34, 197, 94, 0.1)',
                         borderWidth: 3,
@@ -365,7 +405,7 @@ document.addEventListener('alpine:init', () => {
                         pointRadius: 5
                     }, {
                         label: 'Stock Out',
-                        data: [100, 120, 150, 130, 140, 160, 120],
+                        data: chartData.stockOut,
                         borderColor: 'rgb(239, 68, 68)',
                         backgroundColor: 'rgba(239, 68, 68, 0.1)',
                         borderWidth: 3,
@@ -422,7 +462,7 @@ document.addEventListener('alpine:init', () => {
                 data: {
                     labels: ['In Stock', 'Low Stock', 'Out of Stock'],
                     datasets: [{
-                        data: [68, 22, 10],
+                        data: chartData.stockDistribution,
                         backgroundColor: [
                             'rgb(59, 130, 246)',
                             'rgb(234, 179, 8)',
@@ -440,6 +480,18 @@ document.addEventListener('alpine:init', () => {
                     plugins: {
                         legend: {
                             display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += context.parsed + '%';
+                                    return label;
+                                }
+                            }
                         }
                     }
                 }
