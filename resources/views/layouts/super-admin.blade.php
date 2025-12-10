@@ -70,40 +70,58 @@
             </div>
 
             <!-- Navigation -->
-            <nav class="flex-1 px-4 space-y-2">
-                <a href="{{ route('admin.dashboard') }}" 
-                   class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-all {{ request()->routeIs('admin.dashboard') ? 'bg-gray-800 border-l-4 border-indigo-500' : '' }}">
-                    <i class="fas fa-chart-line w-5"></i>
-                    <span>Dashboard</span>
-                </a>
-                
-                <a href="#" 
-                   class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-all">
-                    <i class="fas fa-building w-5"></i>
-                    <span>Companies</span>
-                    <span class="ml-auto bg-indigo-500 text-xs px-2 py-1 rounded-full">{{ $totalCompanies ?? 0 }}</span>
-                </a>
-                
-                <a href="#" 
-                   class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-all">
-                    <i class="fas fa-users w-5"></i>
-                    <span>Users</span>
-                    <span class="ml-auto bg-green-500 text-xs px-2 py-1 rounded-full">{{ $totalUsers ?? 0 }}</span>
-                </a>
-                
-                <a href="#" 
-                   class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-all">
-                    <i class="fas fa-credit-card w-5"></i>
-                    <span>Subscriptions</span>
-                </a>
-                
-                <a href="#" 
-                   class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-all">
-                    <i class="fas fa-cog w-5"></i>
-                    <span>Settings</span>
-                </a>
-            </nav>
-
+           <!-- In your super-admin layout file -->
+<nav class="flex-1 px-4 space-y-2">
+    <a href="{{ route('admin.dashboard') }}" 
+       class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-all {{ request()->routeIs('admin.dashboard') ? 'bg-gray-800 border-l-4 border-indigo-500' : '' }}">
+        <i class="fas fa-chart-line w-5"></i>
+        <span>Dashboard</span>
+    </a>
+    
+    <a href="{{ route('admin.companies.index') }}" 
+       class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-all {{ request()->routeIs('admin.companies.*') ? 'bg-gray-800 border-l-4 border-indigo-500' : '' }}">
+        <i class="fas fa-building w-5"></i>
+        <span>Companies</span>
+        <span class="ml-auto bg-indigo-500 text-xs px-2 py-1 rounded-full">{{ App\Models\Tenant::count() }}</span>
+    </a>
+    
+    <a href="{{ route('admin.users.index') }}" 
+       class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-all {{ request()->routeIs('admin.users.*') ? 'bg-gray-800 border-l-4 border-indigo-500' : '' }}">
+        <i class="fas fa-users w-5"></i>
+        <span>Users</span>
+        <span class="ml-auto bg-green-500 text-xs px-2 py-1 rounded-full">{{ App\Models\User::count() }}</span>
+    </a>
+    
+    <a href="{{ route('admin.subscriptions.index') }}" 
+       class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-all {{ request()->routeIs('admin.subscriptions.*') ? 'bg-gray-800 border-l-4 border-indigo-500' : '' }}">
+        <i class="fas fa-credit-card w-5"></i>
+        <span>Subscriptions</span>
+    </a>
+    
+    <a href="{{ route('admin.payments.index') }}" 
+       class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-all {{ request()->routeIs('admin.payments.*') ? 'bg-gray-800 border-l-4 border-indigo-500' : '' }}">
+        <i class="fas fa-receipt w-5"></i>
+        <span>Payments</span>
+    </a>
+    
+    <a href="{{ route('admin.analytics.index') }}" 
+       class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-all {{ request()->routeIs('admin.analytics.*') ? 'bg-gray-800 border-l-4 border-indigo-500' : '' }}">
+        <i class="fas fa-chart-bar w-5"></i>
+        <span>Analytics</span>
+    </a>
+    
+    <a href="{{ route('admin.reports.index') }}" 
+       class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-all {{ request()->routeIs('admin.reports.*') ? 'bg-gray-800 border-l-4 border-indigo-500' : '' }}">
+        <i class="fas fa-file-alt w-5"></i>
+        <span>Reports</span>
+    </a>
+    
+    <a href="{{ route('admin.settings.index') }}" 
+       class="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-800 transition-all {{ request()->routeIs('admin.settings.*') ? 'bg-gray-800 border-l-4 border-indigo-500' : '' }}">
+        <i class="fas fa-cog w-5"></i>
+        <span>Settings</span>
+    </a>
+</nav>
             <!-- User Profile -->
             <div class="p-4 border-t border-gray-700">
                 <div class="flex items-center space-x-3">

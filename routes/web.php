@@ -1,7 +1,16 @@
 <?php
 
 use App\Http\Controllers\Auth\RegisterCompanyController;
+
 use App\Http\Controllers\SuperAdmin\DashboardController;
+use App\Http\Controllers\SuperAdmin\CompanyController;
+use App\Http\Controllers\SuperAdmin\UserController;
+use App\Http\Controllers\SuperAdmin\SubscriptionController;
+use App\Http\Controllers\SuperAdmin\PaymentController;
+use App\Http\Controllers\SuperAdmin\AnalyticsController;
+use App\Http\Controllers\SuperAdmin\ReportController;
+use App\Http\Controllers\SuperAdmin\SettingController;
+
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
