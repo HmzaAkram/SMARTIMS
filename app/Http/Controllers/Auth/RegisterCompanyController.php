@@ -49,7 +49,7 @@ public function store(Request $request)
             $request->company_phone
         );
 
-        // Create user in CENTRAL database FIRST (important!)
+        // Create user in CENTRAL database
         $centralUser = \App\Models\User::create([
             'name'       => $request->name,
             'email'      => $request->email,
@@ -61,17 +61,41 @@ public function store(Request $request)
         // Now switch to tenant database
         TenantService::switchToTenant($tenant);
 
-        // Create user in TENANT database
-        $tenantUser = \App\Models\User::create([
-            'name'       => $request->name,
-            'email'      => $request->email,
-            'password'   => Hash::make($request->password),
-            'tenant_id'  => $tenant->id,
-            'email_verified_at' => now(),
-        ]);
+        // IMPORTANT: Use a different email for tenant user or use tenant-specific email
+        // Option 1: Append tenant ID to email to make it unique
+        $tenantEmail = $request->email; // This is the same email, which might cause issues
+        
+        // Better approach: Use a different email format or check if email exists in tenant DB
+        $tenantEmail = $tenant->id . '_' . $request->email; // Prefix with tenant ID
+        
+        // Or Option 2: Use the same email but make tenant DB connection unique
+        // Since tenant databases are separate, the same email should be allowed
+        // The issue might be with the database connection not switching properly
+        
+        // Let's check if tenant database connection is working
+        try {
+            // Test tenant connection
+            DB::connection('tenant')->getPdo();
+            
+            // Create user in TENANT database with tenant-specific connection
+            $tenantUser = new \App\Models\User();
+            $tenantUser->setConnection('tenant'); // Explicitly set connection
+            
+            $tenantUser->fill([
+                'name'       => $request->name,
+                'email'      => $request->email, // Use same email - should be OK in separate DB
+                'password'   => Hash::make($request->password),
+                'tenant_id'  => $tenant->id,
+                'email_verified_at' => now(),
+            ])->save();
+            
+        } catch (\Exception $e) {
+            \Log::error('Tenant DB connection failed: ' . $e->getMessage());
+            throw $e;
+        }
 
         // Assign company-admin role in TENANT database
-        $role = \Spatie\Permission\Models\Role::firstOrCreate([
+        $role = \Spatie\Permission\Models\Role::on('tenant')->firstOrCreate([
             'name' => 'company-admin',
             'guard_name' => 'web'
         ]);
@@ -81,7 +105,7 @@ public function store(Request $request)
         // Switch back to central
         TenantService::switchToCentral();
 
-        // Login the CENTRAL user (not tenant user)
+        // Login the CENTRAL user
         auth()->login($centralUser);
 
         return redirect()->route('company.dashboard', ['tenant' => $tenant->domain])
@@ -89,6 +113,7 @@ public function store(Request $request)
 
     } catch (\Exception $e) {
         \Log::error('Registration failed: ' . $e->getMessage());
+        \Log::error('Stack trace: ' . $e->getTraceAsString());
         
         if ($tenant) {
             try {
