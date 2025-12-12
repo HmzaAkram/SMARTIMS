@@ -41,7 +41,7 @@ public function store(Request $request)
     $tenant = null;
 
     try {
-        // Create tenant
+        // Create tenant (this will create DB and run migrations)
         $tenant = $this->tenantService->create(
             $request->company_name,
             $request->subdomain,
@@ -58,54 +58,41 @@ public function store(Request $request)
             'email_verified_at' => now(),
         ]);
 
-        // Now switch to tenant database
+        // Switch to tenant database
         TenantService::switchToTenant($tenant);
 
-        // IMPORTANT: Use a different email for tenant user or use tenant-specific email
-        // Option 1: Append tenant ID to email to make it unique
-        $tenantEmail = $request->email; // This is the same email, which might cause issues
-        
-        // Better approach: Use a different email format or check if email exists in tenant DB
-        $tenantEmail = $tenant->id . '_' . $request->email; // Prefix with tenant ID
-        
-        // Or Option 2: Use the same email but make tenant DB connection unique
-        // Since tenant databases are separate, the same email should be allowed
-        // The issue might be with the database connection not switching properly
-        
-        // Let's check if tenant database connection is working
-        try {
-            // Test tenant connection
-            DB::connection('tenant')->getPdo();
-            
-            // Create user in TENANT database with tenant-specific connection
-            $tenantUser = new \App\Models\User();
-            $tenantUser->setConnection('tenant'); // Explicitly set connection
-            
-            $tenantUser->fill([
-                'name'       => $request->name,
-                'email'      => $request->email, // Use same email - should be OK in separate DB
-                'password'   => Hash::make($request->password),
-                'tenant_id'  => $tenant->id,
-                'email_verified_at' => now(),
-            ])->save();
-            
-        } catch (\Exception $e) {
-            \Log::error('Tenant DB connection failed: ' . $e->getMessage());
-            throw $e;
-        }
+        // Create same user in TENANT database
+        $tenantUser = \App\Models\User::on('tenant')->create([
+            'name'       => $request->name,
+            'email'      => $request->email,
+            'password'   => Hash::make($request->password),
+            'tenant_id'  => $tenant->id,
+            'email_verified_at' => now(),
+        ]);
 
-        // Assign company-admin role in TENANT database
-        $role = \Spatie\Permission\Models\Role::on('tenant')->firstOrCreate([
+        // Create company-admin role in tenant DB
+        \Spatie\Permission\Models\Role::on('tenant')->create([
             'name' => 'company-admin',
             'guard_name' => 'web'
         ]);
         
-        $tenantUser->assignRole($role);
+        $tenantUser->assignRole('company-admin');
+
+        // Create subscription in central DB
+        \App\Models\Subscription::create([
+            'tenant_id' => $tenant->id,
+            'plan_name' => $request->plan,
+            'price' => $this->getPlanPrice($request->plan),
+            'status' => 'active',
+            'billing_cycle' => 'monthly',
+            'trial_ends_at' => now()->addDays(30),
+            'features' => $this->getPlanFeatures($request->plan),
+        ]);
 
         // Switch back to central
         TenantService::switchToCentral();
 
-        // Login the CENTRAL user
+        // Login the user
         auth()->login($centralUser);
 
         return redirect()->route('company.dashboard', ['tenant' => $tenant->domain])
@@ -113,7 +100,7 @@ public function store(Request $request)
 
     } catch (\Exception $e) {
         \Log::error('Registration failed: ' . $e->getMessage());
-        \Log::error('Stack trace: ' . $e->getTraceAsString());
+        \Log::error($e->getTraceAsString());
         
         if ($tenant) {
             try {
@@ -130,5 +117,24 @@ public function store(Request $request)
             'error' => 'Registration failed: ' . $e->getMessage()
         ]);
     }
+}
+
+private function getPlanPrice($plan)
+{
+    return match($plan) {
+        'free' => 0.00,
+        'standard' => 29.00,
+        'premium' => 79.00,
+        default => 0.00
+    };
+}
+
+private function getPlanFeatures($plan)
+{
+    return match($plan) {
+        'free' => ['users' => 1, 'storage' => '1GB', 'support' => 'email'],
+        'standard' => ['users' => 5, 'storage' => '10GB', 'support' => 'priority'],
+        'premium' => ['users' => 'unlimited', 'storage' => '100GB', 'support' => '24/7'],
+    };
 }
 }
