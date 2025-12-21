@@ -154,6 +154,9 @@ class TenantService
     
     // 2. Create other required tables with SQL
     $this->createRequiredTablesWithSQL();
+
+    // 3. Run Tenant Migrations (for items, categories, etc.)
+    $this->runMigration('database/migrations/tenant', 'Tenant Migrations', $tenant);
     
     \Log::info("--- Tenant database tables created ---");
 }
