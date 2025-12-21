@@ -94,7 +94,7 @@ npm run dev
 php artisan serve
 ```
 
-Visit `http://localhost:8000` in your browser.
+Visit `http://smartims.test:8000/` in your browser.
 
 ## 🔐 Default Login Credentials
 
