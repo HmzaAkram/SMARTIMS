@@ -70,11 +70,7 @@ public function store(Request $request)
             'email_verified_at' => now(),
         ]);
 
-        // Create company-admin role in tenant DB
-        \Spatie\Permission\Models\Role::on('tenant')->create([
-            'name' => 'company-admin',
-            'guard_name' => 'web'
-        ]);
+        // Role 'company-admin' is already created by TenantService::seedDefaultRoles()
         
         $tenantUser->assignRole('company-admin');
 
