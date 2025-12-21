@@ -9,13 +9,23 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('items', function (Blueprint $table) {
-            // Check if quantity column exists
-            if (Schema::hasColumn('items', 'quantity')) {
-                // If quantity exists, rename it to stock
-                $table->renameColumn('quantity', 'stock');
+            $hasStock = Schema::hasColumn('items', 'stock');
+            $hasQuantity = Schema::hasColumn('items', 'quantity');
+
+            if ($hasStock) {
+                if ($hasQuantity) {
+                    // Both exist: prefer stock, remove old quantity to clean up
+                    $table->dropColumn('quantity');
+                }
+                // If stock exists and quantity doesn't, we are good.
             } else {
-                // If quantity doesn't exist, add stock column
-                $table->integer('stock')->default(0)->after('category_id');
+                if ($hasQuantity) {
+                    // Stock doesn't exist, but quantity does: rename it
+                    $table->renameColumn('quantity', 'stock');
+                } else {
+                    // Neither exists: create stock
+                    $table->integer('stock')->default(0)->after('category_id');
+                }
             }
         });
     }
@@ -23,8 +33,11 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('items', function (Blueprint $table) {
-            if (Schema::hasColumn('items', 'stock')) {
-                // Rename back to quantity
+            // Reverse operation safely
+            $hasStock = Schema::hasColumn('items', 'stock');
+            $hasQuantity = Schema::hasColumn('items', 'quantity');
+
+            if ($hasStock && !$hasQuantity) {
                 $table->renameColumn('stock', 'quantity');
             }
         });
